@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>FinanControl</title>
+  
+  <!-- Configuración PWA y iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FinanControl">
+  <meta name="theme-color" content="#10B981">
+  
+  <!-- Icono PWA iOS (Verde con símbolo €) -->
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='120' fill='%2310b981'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='320' fill='white'>€</text></svg>">
+
+  <!-- Manifest Inline vía Data URI -->
+  <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22FinanControl%22%2C%22short_name%22%3A%22FinanControl%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230f172a%22%2C%22theme_color%22%3A%22%2310b981%22%7D">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Feather Icons -->
+  <script src="https://unpkg.com/feather-icons"></script>
+
+  <style>
+    /* Estilos adaptados para zona segura de iPhone */
+    body {
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .pb-safe {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans flex flex-col">
+
+  <!-- Encabezado -->
+  <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700 sticky top-0 z-30 px-4 py-3 flex justify-between items-center">
+    <div class="flex items-center space-x-2">
+      <div class="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center font-bold text-white shadow-lg shadow-emerald-500/30">€</div>
+      <h1 class="text-xl font-bold tracking-tight text-white">FinanControl</h1>
+    </div>
+    <div id="annualTotalHeader" class="text-xs bg-slate-700 px-3 py-1.5 rounded-full text-emerald-400 font-semibold border border-slate-600">
+      0 € / año
+    </div>
+  </header>
+
+  <!-- Contenido Principal -->
+  <main class="flex-1 p-4 max-w-lg mx-auto w-full">
+    
+    <!-- PESTAÑA: RESUMEN DE GASTOS -->
+    <section id="tab-gastos" class="tab-content space-y-4">
+      <div class="flex justify-between items-center">
+        <h2 class="text-lg font-semibold text-slate-200">Todos tus gastos</h2>
+        <span id="expensesCount" class="text-xs text-slate-400">0 registrados</span>
+      </div>
+
+      <!-- Resumen por categoría -->
+      <div id="categorySummary" class="grid grid-cols-2 gap-2"></div>
+
+      <!-- Lista de Gastos -->
+      <div id="expensesList" class="space-y-3">
+        <!-- Inserción dinámica de gastos -->
+      </div>
+    </section>
+
+    <!-- PESTAÑA: CALENDARIO -->
+    <section id="tab-calendario" class="tab-content hidden space-y-4">
+      <!-- Selector de Mes -->
+      <div class="flex justify-between items-center bg-slate-800 p-3 rounded-2xl border border-slate-700">
+        <button onclick="changeMonth(-1)" class="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200"><i data-feather="chevron-left"></i></button>
+        <span id="calendarMonthLabel" class="font-bold text-slate-100"></span>
+        <button onclick="changeMonth(1)" class="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200"><i data-feather="chevron-right"></i></button>
+      </div>
+
+      <!-- Cuadrícula del Calendario -->
+      <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700">
+        <div class="grid grid-cols-7 gap-1 text-center text-xs text-slate-400 font-medium mb-2">
+          <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+        </div>
+        <div id="calendarGrid" class="grid grid-cols-7 gap-1"></div>
+      </div>
+
+      <!-- Detalle del día seleccionado -->
+      <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3">
+        <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+          <h3 id="selectedDateLabel" class="font-semibold text-slate-200">Selecciona un día</h3>
+          <button onclick="openAddModalForSelectedDate()" class="text-xs text-emerald-400 hover:underline flex items-center gap-1">
+            <i data-feather="plus-circle" class="w-3.5 h-3.5"></i> Añadir en esta fecha
+          </button>
+        </div>
+        <div id="dayEventsList" class="space-y-2 text-sm text-slate-400">
+          Toca cualquier día del calendario para consultar cobros o avisos.
+        </div>
+      </div>
+
+      <!-- Gráfico de carga mensual -->
+      <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3">
+        <h3 class="text-sm font-semibold text-slate-300">Carga financiera mensual</h3>
+        <div id="monthlyChart" class="flex items-end justify-between h-32 gap-1 pt-4"></div>
+      </div>
+    </section>
+
+    <!-- PESTAÑA: CONFIGURACIÓN -->
+    <section id="tab-configuracion" class="tab-content hidden space-y-4">
+      <h2 class="text-lg font-semibold text-slate-200">Configuración</h2>
+
+      <!-- Notificaciones -->
+      <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3">
+        <div class="flex items-center space-x-3">
+          <div class="p-2 bg-emerald-500/20 text-emerald-400 rounded-xl"><i data-feather="bell"></i></div>
+          <div>
+            <h3 class="font-medium text-slate-100">Notificaciones en iPhone</h3>
+            <p class="text-xs text-slate-400">Alertas de llamadas y vencimientos</p>
+          </div>
+        </div>
+        <button onclick="requestNotificationPermission()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-medium text-sm transition">
+          Activar o Probar Notificaciones
+        </button>
+      </div>
+
+      <!-- Copias de seguridad -->
+      <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3">
+        <div class="flex items-center space-x-3">
+          <div class="p-2 bg-blue-500/20 text-blue-400 rounded-xl"><i data-feather="database"></i></div>
+          <div>
+            <h3 class="font-medium text-slate-100">Copia de Seguridad</h3>
+            <p class="text-xs text-slate-400">Guarda o restaura tus datos en JSON</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="exportData()" class="py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl text-xs font-medium">Exportar JSON</button>
+          <label class="py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl text-xs font-medium text-center cursor-pointer">
+            Importar JSON
+            <input type="file" id="importFileInput" accept=".json" onchange="importData(event)" class="hidden">
+          </label>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Botón Flotante "+" accesible desde cualquier TAB -->
+  <button onclick="openModal()" class="fixed right-5 bottom-20 w-14 h-14 bg-emerald-500 hover:bg-emerald-400 text-white rounded-full shadow-2xl flex items-center justify-center z-40 active:scale-95 transition">
+    <i data-feather="plus" class="w-7 h-7"></i>
+  </button>
+
+  <!-- Navegación Inferior Móvil (Bottom Nav) -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-slate-800/95 backdrop-blur border-t border-slate-700 z-30 pb-safe">
+    <div class="flex justify-around items-center h-16 max-w-lg mx-auto">
+      <button onclick="switchTab('gastos')" id="nav-gastos" class="nav-btn flex flex-col items-center justify-center w-full h-full text-emerald-400">
+        <i data-feather="list" class="w-5 h-5"></i>
+        <span class="text-[10px] mt-1 font-medium">Gastos</span>
+      </button>
+      <button onclick="switchTab('calendario')" id="nav-calendario" class="nav-btn flex flex-col items-center justify-center w-full h-full text-slate-400">
+        <i data-feather="calendar" class="w-5 h-5"></i>
+        <span class="text-[10px] mt-1 font-medium">Calendario</span>
+      </button>
+      <button onclick="switchTab('configuracion')" id="nav-configuracion" class="nav-btn flex flex-col items-center justify-center w-full h-full text-slate-400">
+        <i data-feather="settings" class="w-5 h-5"></i>
+        <span class="text-[10px] mt-1 font-medium">Configuración</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Modal Formularios -->
+  <div id="expenseModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-slate-700 p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+        <h3 id="modalTitle" class="text-lg font-bold text-slate-100">Nuevo Gasto</h3>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i data-feather="x"></i></button>
+      </div>
+
+      <form id="expenseForm" onsubmit="saveExpense(event)" class="space-y-3">
+        <input type="hidden" id="expenseId">
+        
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Título / Concepto</label>
+          <input type="text" id="expenseTitle" required placeholder="ej. Seguro Coche AXA" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Importe (€)</label>
+            <input type="number" step="0.01" id="expenseAmount" required placeholder="250" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Categoría</label>
+            <select id="expenseCategory" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none">
+              <option value="Seguros">Seguros</option>
+              <option value="Impuestos">Impuestos</option>
+              <option value="Suscripciones">Suscripciones</option>
+              <option value="Servicios">Servicios</option>
+              <option value="Otros">Otros</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Frecuencia</label>
+            <select id="expenseFrequency" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none">
+              <option value="Anual">Anual</option>
+              <option value="Semestral">Semestral</option>
+              <option value="Trimestral">Trimestral</option>
+              <option value="Mensual">Mensual</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Próximo Cobro</label>
+            <input type="date" id="expenseDate" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Teléfono Empresa</label>
+            <input type="tel" id="expensePhone" placeholder="ej. 900123456" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Preaviso Llamada</label>
+            <select id="expenseNotice" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none">
+              <option value="7">7 días antes</option>
+              <option value="15">15 días antes</option>
+              <option value="30" selected>30 días antes</option>
+              <option value="60">60 días antes</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="pt-2 flex gap-2">
+          <button type="button" onclick="closeModal()" class="w-1/2 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-xl text-sm font-medium">Cancelar</button>
+          <button type="submit" class="w-1/2 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-sm font-semibold">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Lógica en JavaScript -->
+  <script>
+    let expenses = JSON.parse(localStorage.getItem('financontrol_expenses')) || [];
+    let currentDate = new Date();
+    let selectedDayDate = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      feather.replace();
+      renderExpenses();
+      renderCalendar();
+    });
+
+    // Cambio de Pestañas
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-btn').forEach(el => {
+        el.classList.remove('text-emerald-400');
+        el.classList.add('text-slate-400');
+      });
+
+      document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+      document.getElementById(`nav-${tabName}`).classList.add('text-emerald-400');
+      document.getElementById(`nav-${tabName}`).classList.remove('text-slate-400');
+
+      if (tabName === 'calendario') renderCalendar();
+    }
+
+    // Modal
+    function openModal(editId = null) {
+      const modal = document.getElementById('expenseModal');
+      const form = document.getElementById('expenseForm');
+      modal.classList.remove('hidden');
+
+      if (editId) {
+        const item = expenses.find(e => e.id === editId);
+        if (item) {
+          document.getElementById('modalTitle').innerText = 'Editar Gasto';
+          document.getElementById('expenseId').value = item.id;
+          document.getElementById('expenseTitle').value = item.title;
+          document.getElementById('expenseAmount').value = item.amount;
+          document.getElementById('expenseCategory').value = item.category;
+          document.getElementById('expenseFrequency').value = item.frequency;
+          document.getElementById('expenseDate').value = item.date;
+          document.getElementById('expensePhone').value = item.phone || '';
+          document.getElementById('expenseNotice').value = item.notice || 30;
+        }
+      } else {
+        document.getElementById('modalTitle').innerText = 'Nuevo Gasto';
+        form.reset();
+        document.getElementById('expenseId').value = '';
+        if (selectedDayDate) {
+          document.getElementById('expenseDate').value = selectedDayDate;
+        } else {
+          document.getElementById('expenseDate').valueAsDate = new Date();
+        }
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('expenseModal').classList.add('hidden');
+    }
+
+    // Operaciones CRUD
+    function saveExpense(e) {
+      e.preventDefault();
+      const id = document.getElementById('expenseId').value;
+      const data = {
+        id: id ? parseInt(id) : Date.now(),
+        title: document.getElementById('expenseTitle').value,
+        amount: parseFloat(document.getElementById('expenseAmount').value),
+        category: document.getElementById('expenseCategory').value,
+        frequency: document.getElementById('expenseFrequency').value,
+        date: document.getElementById('expenseDate').value,
+        phone: document.getElementById('expensePhone').value,
+        notice: parseInt(document.getElementById('expenseNotice').value)
+      };
+
+      if (id) {
+        expenses = expenses.map(item => item.id === parseInt(id) ? data : item);
+      } else {
+        expenses.push(data);
+      }
+
+      localStorage.setItem('financontrol_expenses', JSON.stringify(expenses));
+      closeModal();
+      renderExpenses();
+      renderCalendar();
+    }
+
+    function deleteExpense(id) {
+      if (confirm('¿Deseas eliminar este gasto?')) {
+        expenses = expenses.filter(e => e.id !== id);
+        localStorage.setItem('financontrol_expenses', JSON.stringify(expenses));
+        renderExpenses();
+        renderCalendar();
+      }
+    }
+
+    // Renderizar Lista y Resumen de Gastos
+    function renderExpenses() {
+      const list = document.getElementById('expensesList');
+      const countLabel = document.getElementById('expensesCount');
+      const annualTotalHeader = document.getElementById('annualTotalHeader');
+      const catSummary = document.getElementById('categorySummary');
+
+      list.innerHTML = '';
+      countLabel.innerText = `${expenses.length} registrados`;
+
+      let totalAnnual = 0;
+      let categories = {};
+
+      expenses.forEach(item => {
+        let annualMultiplier = item.frequency === 'Anual' ? 1 : item.frequency === 'Semestral' ? 2 : item.frequency === 'Trimestral' ? 4 : 12;
+        let itemAnnualCost = item.amount * annualMultiplier;
+        totalAnnual += itemAnnualCost;
+
+        categories[item.category] = (categories[item.category] || 0) + itemAnnualCost;
+
+        const card = document.createElement('div');
+        card.className = 'bg-slate-800 p-4 rounded-2xl border border-slate-700 flex justify-between items-center';
+        card.innerHTML = `
+          <div class="space-y-1">
+            <div class="flex items-center space-x-2">
+              <span class="font-bold text-slate-100">${item.title}</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 font-medium">${item.category}</span>
+            </div>
+            <div class="text-xs text-slate-400 flex items-center space-x-3">
+              <span>📅 ${item.date}</span>
+              <span>🔄 ${item.frequency}</span>
+            </div>
+            ${item.phone ? `<a href="tel:${item.phone}" class="inline-flex items-center text-xs text-emerald-400 hover:underline">📞 Llamar: ${item.phone}</a>` : ''}
+          </div>
+          <div class="text-right space-y-2">
+            <div class="text-base font-bold text-emerald-400">${item.amount.toFixed(2)} €</div>
+            <div class="flex space-x-1 justify-end">
+              <button onclick="openModal(${item.id})" class="p-1.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-300"><i data-feather="edit-2" class="w-3.5 h-3.5"></i></button>
+              <button onclick="deleteExpense(${item.id})" class="p-1.5 bg-slate-700 hover:bg-red-500/20 text-red-400 rounded-lg"><i data-feather="trash-2" class="w-3.5 h-3.5"></i></button>
+            </div>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+
+      annualTotalHeader.innerText = `${totalAnnual.toFixed(0)} € / año`;
+
+      // Tarjetas por categoría
+      catSummary.innerHTML = '';
+      Object.keys(categories).forEach(cat => {
+        catSummary.innerHTML += `
+          <div class="bg-slate-800 p-3 rounded-xl border border-slate-700">
+            <div class="text-xs text-slate-400">${cat}</div>
+            <div class="text-sm font-bold text-slate-200">${categories[cat].toFixed(0)} €/año</div>
+          </div>
+        `;
+      });
+
+      feather.replace();
+    }
+
+    // Renderizar Calendario y Carga Mensual
+    function renderCalendar() {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+
+      const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+      document.getElementById('calendarMonthLabel').innerText = `${monthNames[month]} ${year}`;
+
+      const grid = document.getElementById('calendarGrid');
+      grid.innerHTML = '';
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const startingDay = firstDay === 0 ? 6 : firstDay - 1; 
+      const totalDays = new Date(year, month + 1, 0).getDate();
+
+      for (let i = 0; i < startingDay; i++) {
+        grid.appendChild(document.createElement('div'));
+      }
+
+      for (let day = 1; day <= totalDays; day++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const dayCell = document.createElement('button');
+        dayCell.className = `h-10 rounded-xl flex flex-col items-center justify-center text-xs relative border border-transparent transition ${selectedDayDate === dateStr ? 'border-emerald-400 bg-slate-700' : 'bg-slate-900/50 hover:bg-slate-700'}`;
+        dayCell.innerHTML = `<span>${day}</span>`;
+
+        // Marcas de cobro o aviso
+        let hasCharge = false;
+        let hasNotice = false;
+
+        expenses.forEach(e => {
+          if (e.date === dateStr) hasCharge = true;
+          
+          // Calcular fecha de preaviso
+          let chargeDate = new Date(e.date);
+          chargeDate.setDate(chargeDate.getDate() - (e.notice || 30));
+          if (chargeDate.toISOString().split('T')[0] === dateStr) hasNotice = true;
+        });
+
+        if (hasCharge || hasNotice) {
+          const dots = document.createElement('div');
+          dots.className = 'flex gap-0.5 mt-0.5';
+          if (hasCharge) dots.innerHTML += `<span class="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>`;
+          if (hasNotice) dots.innerHTML += `<span class="w-1.5 h-1.5 bg-amber-400 rounded-full"></span>`;
+          dayCell.appendChild(dots);
+        }
+
+        dayCell.onclick = () => selectDay(dateStr);
+        grid.appendChild(dayCell);
+      }
+
+      renderMonthlyChart(year);
+    }
+
+    function changeMonth(delta) {
+      currentDate.setMonth(currentDate.getMonth() + delta);
+      renderCalendar();
+    }
+
+    function selectDay(dateStr) {
+      selectedDayDate = dateStr;
+      document.getElementById('selectedDateLabel').innerText = `Detalle: ${dateStr}`;
+      
+      const dayEventsList = document.getElementById('dayEventsList');
+      dayEventsList.innerHTML = '';
+
+      let dayEvents = [];
+
+      expenses.forEach(e => {
+        if (e.date === dateStr) {
+          dayEvents.push({ type: 'charge', item: e });
+        }
+        let chargeDate = new Date(e.date);
+        chargeDate.setDate(chargeDate.getDate() - (e.notice || 30));
+        if (chargeDate.toISOString().split('T')[0] === dateStr) {
+          dayEvents.push({ type: 'notice', item: e });
+        }
+      });
+
+      if (dayEvents.length === 0) {
+        dayEventsList.innerHTML = `<span class="text-xs text-slate-500">Sin eventos ni cobros programados para hoy.</span>`;
+      } else {
+        dayEvents.forEach(ev => {
+          const div = document.createElement('div');
+          div.className = `p-2.5 rounded-xl border text-xs flex justify-between items-center ${ev.type === 'charge' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-amber-500/10 border-amber-500/30 text-amber-300'}`;
+          div.innerHTML = `
+            <div>
+              <div class="font-bold">${ev.type === 'charge' ? '💳 Cobro:' : '🔔 Aviso Llamada:'} ${ev.item.title}</div>
+              <div class="text-[10px] opacity-80">${ev.item.amount.toFixed(2)} € - ${ev.item.category}</div>
+            </div>
+            ${ev.item.phone ? `<a href="tel:${ev.item.phone}" class="px-2 py-1 bg-emerald-500 text-white rounded-lg text-[10px] font-bold">Llamar</a>` : ''}
+          `;
+          dayEventsList.appendChild(div);
+        });
+      }
+
+      renderCalendar();
+    }
+
+    function openAddModalForSelectedDate() {
+      openModal();
+    }
+
+    function renderMonthlyChart(year) {
+      const chart = document.getElementById('monthlyChart');
+      chart.innerHTML = '';
+      let monthlyTotals = new Array(12).fill(0);
+
+      expenses.forEach(e => {
+        let d = new Date(e.date);
+        if (d.getFullYear() === year) {
+          monthlyTotals[d.getMonth()] += e.amount;
+        }
+      });
+
+      let max = Math.max(...monthlyTotals, 100);
+
+      const monthsShort = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+      monthlyTotals.forEach((val, idx) => {
+        let heightPct = (val / max) * 100;
+        chart.innerHTML += `
+          <div class="flex-1 flex flex-col items-center h-full justify-end">
+            <div class="w-full bg-emerald-500/30 rounded-t-sm hover:bg-emerald-400 transition" style="height: ${heightPct}%"></div>
+            <span class="text-[9px] text-slate-400 mt-1">${monthsShort[idx]}</span>
+          </div>
+        `;
+      });
+    }
+
+    // Notificaciones Web
+    function requestNotificationPermission() {
+      if ('Notification' in window) {
+        Notification.requestPermission().then(perm => {
+          if (perm === 'granted') {
+            new Notification("FinanControl", {
+              body: "¡Las notificaciones están activadas correctamente en tu teléfono!",
+              icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='120' fill='%2310b981'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='320' fill='white'>€</text></svg>"
+            });
+          } else {
+            alert('Por favor autoriza las notificaciones desde los ajustes de Safari/iOS.');
+          }
+        });
+      } else {
+        alert('Este navegador no soporta Web Notifications API.');
+      }
+    }
+
+    // Exportar / Importar JSON
+    function exportData() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(expenses, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `financontrol_backup_${new Date().toISOString().split('T')[0]}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function importData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (Array.isArray(imported)) {
+            expenses = imported;
+            localStorage.setItem('financontrol_expenses', JSON.stringify(expenses));
+            renderExpenses();
+            renderCalendar();
+            alert('¡Datos importados con éxito!');
+          }
+        } catch (err) {
+          alert('El archivo seleccionado no tiene un formato JSON válido.');
+        }
+      };
+      reader.readAsText(file);
+    }
+  </script>
+</body>
+</html>
