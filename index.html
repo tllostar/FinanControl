@@ -190,7 +190,7 @@
 
   </main>
 
-  <!-- Botón Flotante "+" (Posición elevada para libre navegación) -->
+  <!-- Botón Flotante "+" -->
   <button onclick="openModal()" class="fixed right-5 bottom-24 w-14 h-14 bg-emerald-500 hover:bg-emerald-400 text-white rounded-full shadow-2xl flex items-center justify-center z-40 active:scale-95 transition">
     <i data-feather="plus" class="w-7 h-7"></i>
   </button>
@@ -265,6 +265,7 @@
           <div>
             <label class="block text-xs text-slate-400 mb-1">Avisar</label>
             <select id="expenseNotice" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none">
+              <option value="0">No avisar</option>
               <option value="7">7 días antes</option>
               <option value="15">15 días antes</option>
               <option value="30" selected>30 días antes</option>
@@ -315,7 +316,6 @@
       if (tabName === 'configuracion') renderCategoriesConfig();
     }
 
-    // Alternar entre gráficos Barras vs Pie
     function setChartView(mode) {
       currentChartView = mode;
       const btnBar = document.getElementById('btnViewBar');
@@ -400,7 +400,7 @@
           document.getElementById('expenseFrequency').value = item.frequency;
           document.getElementById('expenseDate').value = item.date;
           document.getElementById('expensePhone').value = item.phone || '';
-          document.getElementById('expenseNotice').value = item.notice || 30;
+          document.getElementById('expenseNotice').value = item.notice !== undefined ? item.notice : 30;
         }
       } else {
         document.getElementById('modalTitle').innerText = 'Nuevo Gasto';
@@ -500,7 +500,6 @@
 
       annualTotalHeader.innerText = `${totalAnnual.toFixed(0)} € / año`;
 
-      // Renderizar Barras
       catSummary.innerHTML = '';
       catProgressBar.innerHTML = '';
       const colorsTailwind = ['bg-emerald-500', 'bg-blue-500', 'bg-amber-500', 'bg-purple-500', 'bg-pink-500', 'bg-teal-500'];
@@ -532,12 +531,10 @@
         `;
       });
 
-      // Renderizar Pie Chart SVG
       renderPieChart(catTotals, totalAnnual);
       feather.replace();
     }
 
-    // Cálculo y Renderizado de Gráfico Circular SVG
     function renderPieChart(catTotals, totalAnnual) {
       const svg = document.getElementById('pieChartSvg');
       const legend = document.getElementById('pieLegend');
@@ -561,7 +558,6 @@
         let strokeColor = categoryColorsHex[idx % categoryColorsHex.length];
         idx++;
 
-        // Creación del segmento de círculo SVG en viewBox 36x36
         const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         circle.setAttribute("cx", "18");
         circle.setAttribute("cy", "18");
@@ -576,7 +572,6 @@
 
         accumulatedPct += pct;
 
-        // Leyenda del gráfico circular
         legend.innerHTML += `
           <div class="flex items-center space-x-2 text-xs">
             <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: ${strokeColor}"></span>
@@ -616,9 +611,12 @@
 
         expenses.forEach(e => {
           if (e.date === dateStr) hasCharge = true;
-          let chargeDate = new Date(e.date);
-          chargeDate.setDate(chargeDate.getDate() - (e.notice || 30));
-          if (chargeDate.toISOString().split('T')[0] === dateStr) hasNotice = true;
+          const noticeDays = e.notice !== undefined ? e.notice : 30;
+          if (noticeDays > 0) {
+            let chargeDate = new Date(e.date);
+            chargeDate.setDate(chargeDate.getDate() - noticeDays);
+            if (chargeDate.toISOString().split('T')[0] === dateStr) hasNotice = true;
+          }
         });
 
         if (hasCharge || hasNotice) {
@@ -654,10 +652,13 @@
         if (e.date === dateStr) {
           dayEvents.push({ type: 'charge', item: e });
         }
-        let chargeDate = new Date(e.date);
-        chargeDate.setDate(chargeDate.getDate() - (e.notice || 30));
-        if (chargeDate.toISOString().split('T')[0] === dateStr) {
-          dayEvents.push({ type: 'notice', item: e });
+        const noticeDays = e.notice !== undefined ? e.notice : 30;
+        if (noticeDays > 0) {
+          let chargeDate = new Date(e.date);
+          chargeDate.setDate(chargeDate.getDate() - noticeDays);
+          if (chargeDate.toISOString().split('T')[0] === dateStr) {
+            dayEvents.push({ type: 'notice', item: e });
+          }
         }
       });
 
@@ -711,7 +712,6 @@
       });
     }
 
-    // Inicialización y Control de Notificaciones de la App
     function initNotificationUI() {
       const toggle = document.getElementById('notificationToggle');
       const text = document.getElementById('notificationStatusText');
