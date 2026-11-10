@@ -93,16 +93,39 @@
       <!-- SEPARADOR VISUAL -->
       <div class="border-t border-slate-700 my-6"></div>
 
-      <!-- PANEL DE FILTRADO DE GASTOS -->
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <h2 class="text-lg font-semibold">Lista de Gastos</h2>
-        <div class="flex gap-2 w-full sm:w-auto">
-          <select id="filterListYear" onchange="renderExpenses()" class="flex-1 sm:flex-none text-xs bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500">
+      <!-- PANEL DE FILTRADO COMPLETO DE GASTOS -->
+      <div class="space-y-3 bg-slate-800/60 p-4 rounded-2xl border border-slate-700 transition-colors duration-300">
+        <div class="flex justify-between items-center">
+          <h2 class="text-sm font-semibold">Filtrar Lista de Gastos</h2>
+          <button onclick="resetFilters()" class="text-xs text-emerald-400 hover:underline">Limpiar filtros</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <!-- Filtro por Año -->
+          <select id="filterListYear" onchange="renderExpenses()" class="text-xs bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500">
             <option value="all">Año: Todos</option>
           </select>
-          <select id="filterListCategory" onchange="renderExpenses()" class="flex-1 sm:flex-none text-xs bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500">
+
+          <!-- Filtro por Categoría -->
+          <select id="filterListCategory" onchange="renderExpenses()" class="text-xs bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500">
             <option value="all">Categoría: Todas</option>
           </select>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <!-- Filtro por Mes -->
+          <select id="filterListMonth" onchange="renderExpenses()" class="text-xs bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500">
+            <option value="all">Mes: Todos</option>
+            <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4">Abril</option>
+            <option value="5">Mayo</option><option value="6">Junio</option><option value="7">Julio</option><option value="8">Agosto</option>
+            <option value="9">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+          </select>
+
+          <!-- Importe Mínimo -->
+          <input type="number" id="filterMinAmount" oninput="renderExpenses()" placeholder="Mín €" class="text-xs bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500">
+
+          <!-- Importe Máximo -->
+          <input type="number" id="filterMaxAmount" oninput="renderExpenses()" placeholder="Máx €" class="text-xs bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500">
         </div>
       </div>
 
@@ -433,7 +456,6 @@
         select.innerHTML += `<option value="${cat}">${cat}</option>`;
       });
 
-      // Actualizar también el desplegable de categoría del filtro de lista
       const filterCat = document.getElementById('filterListCategory');
       if (filterCat) {
         let currentCatVal = filterCat.value;
@@ -613,6 +635,21 @@
       renderExpenses();
     }
 
+    function resetFilters() {
+      const fYear = document.getElementById('filterListYear');
+      const fCat = document.getElementById('filterListCategory');
+      const fMonth = document.getElementById('filterListMonth');
+      const fMin = document.getElementById('filterMinAmount');
+      const fMax = document.getElementById('filterMaxAmount');
+
+      if (fYear) fYear.value = 'all';
+      if (fCat) fCat.value = 'all';
+      if (fMonth) fMonth.value = 'all';
+      if (fMin) fMin.value = '';
+      if (fMax) fMax.value = '';
+      renderExpenses();
+    }
+
     function renderExpenses() {
       const list = document.getElementById('expensesList');
       const countLabel = document.getElementById('expensesCount');
@@ -620,8 +657,12 @@
       const catSummary = document.getElementById('categorySummary');
       const catProgressBar = document.getElementById('categoryProgressBar');
       const chartTitle = document.getElementById('chartTitle');
+      
       const filterListYear = document.getElementById('filterListYear');
       const filterListCategory = document.getElementById('filterListCategory');
+      const filterListMonth = document.getElementById('filterListMonth');
+      const filterMinAmount = document.getElementById('filterMinAmount');
+      const filterMaxAmount = document.getElementById('filterMaxAmount');
 
       if (!list) return;
       list.innerHTML = '';
@@ -639,30 +680,34 @@
       const badgeBg = currentTheme === 'light' ? 'bg-slate-100 text-slate-700 border border-slate-200' : 'bg-slate-700 text-slate-300';
       const btnActionBg = currentTheme === 'light' ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200' : 'bg-slate-700 hover:bg-slate-600 text-slate-300';
 
-      // Valores seleccionados en el filtro completo de la lista
       const selectedListYear = filterListYear ? filterListYear.value : 'all';
       const selectedListCategory = filterListCategory ? filterListCategory.value : 'all';
+      const selectedListMonth = filterListMonth ? filterListMonth.value : 'all';
+      const minAmount = filterMinAmount && filterMinAmount.value !== '' ? parseFloat(filterMinAmount.value) : null;
+      const maxAmount = filterMaxAmount && filterMaxAmount.value !== '' ? parseFloat(filterMaxAmount.value) : null;
 
       let displayedCount = 0;
 
       expenses.forEach(item => {
         let parts = item.date.split('-');
         let itemYear = parts.length === 3 ? parts[0] : '';
+        let itemMonth = parts.length === 3 ? String(parseInt(parts[1])) : '';
 
         let mult = item.frequency === 'Anual' ? 1 : item.frequency === 'Semestral' ? 2 : item.frequency === 'Trimestral' ? 4 : item.frequency === 'Mensual' ? 12 : 52;
         let itemAnnualCost = item.amount * mult;
 
-        // Cálculo para gráficos (según el selector superior de año)
         if (activeYearFilter === 'all' || itemYear === activeYearFilter) {
           totalFilteredAnnual += itemAnnualCost;
           catTotals[item.category] = (catTotals[item.category] || 0) + itemAnnualCost;
         }
 
-        // Filtrado para la lista inferior (según el selector de año de la lista y categoría)
         const matchYear = (selectedListYear === 'all' || itemYear === selectedListYear);
         const matchCategory = (selectedListCategory === 'all' || item.category === selectedListCategory);
+        const matchMonth = (selectedListMonth === 'all' || itemMonth === selectedListMonth);
+        const matchMin = (minAmount === null || item.amount >= minAmount);
+        const matchMax = (maxAmount === null || item.amount <= maxAmount);
 
-        if (matchYear && matchCategory) {
+        if (matchYear && matchCategory && matchMonth && matchMin && matchMax) {
           displayedCount++;
           const card = document.createElement('div');
           card.className = `${cardBg} p-4 rounded-2xl border flex justify-between items-center transition-colors duration-300`;
