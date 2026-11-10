@@ -54,7 +54,7 @@
     <!-- PESTAÑA: GASTOS -->
     <section id="tab-gastos" class="tab-content space-y-4">
       <div class="flex justify-between items-center">
-        <h2 class="text-lg font-semibold">Todos tus gastos</h2>
+        <h2 class="text-lg font-semibold">Análisis Financiero</h2>
         <span id="expensesCount" class="text-xs opacity-70">0 registrados</span>
       </div>
 
@@ -89,6 +89,24 @@
       </div>
 
       <div id="categorySummary" class="grid grid-cols-2 gap-2"></div>
+
+      <!-- SEPARADOR VISUAL -->
+      <div class="border-t border-slate-700 my-6"></div>
+
+      <!-- PANEL DE FILTRADO DE GASTOS -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <h2 class="text-lg font-semibold">Lista de Gastos</h2>
+        <div class="flex gap-2 w-full sm:w-auto">
+          <select id="filterListYear" onchange="renderExpenses()" class="flex-1 sm:flex-none text-xs bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500">
+            <option value="all">Año: Todos</option>
+          </select>
+          <select id="filterListCategory" onchange="renderExpenses()" class="flex-1 sm:flex-none text-xs bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500">
+            <option value="all">Categoría: Todas</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Lista de Gastos -->
       <div id="expensesList" class="space-y-3"></div>
     </section>
 
@@ -107,7 +125,6 @@
         <div id="calendarGrid" class="grid grid-cols-7 gap-1"></div>
       </div>
 
-      <!-- Sugerencias de Renovación Anual -->
       <div id="renewalSuggestionsContainer" class="hidden space-y-2"></div>
 
       <div id="cardCalDetail" class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3 transition-colors duration-300 shadow-sm">
@@ -303,7 +320,7 @@
       initNotificationUI();
       renderCategoriesSelect();
       renderCategoriesConfig();
-      updateYearFilterDropdown();
+      updateYearFilterDropdowns();
       renderExpenses();
       renderCalendar();
     });
@@ -415,6 +432,17 @@
       categories.forEach(cat => {
         select.innerHTML += `<option value="${cat}">${cat}</option>`;
       });
+
+      // Actualizar también el desplegable de categoría del filtro de lista
+      const filterCat = document.getElementById('filterListCategory');
+      if (filterCat) {
+        let currentCatVal = filterCat.value;
+        filterCat.innerHTML = '<option value="all">Categoría: Todas</option>';
+        categories.forEach(cat => {
+          filterCat.innerHTML += `<option value="${cat}">${cat}</option>`;
+        });
+        filterCat.value = currentCatVal;
+      }
     }
 
     function renderCategoriesConfig() {
@@ -525,7 +553,7 @@
 
       localStorage.setItem('financontrol_expenses', JSON.stringify(expenses));
       closeModal();
-      updateYearFilterDropdown();
+      updateYearFilterDropdowns();
       renderExpenses();
       renderCalendar();
     }
@@ -534,34 +562,49 @@
       if (confirm('¿Deseas eliminar este gasto?')) {
         expenses = expenses.filter(e => e.id !== id);
         localStorage.setItem('financontrol_expenses', JSON.stringify(expenses));
-        updateYearFilterDropdown();
+        updateYearFilterDropdowns();
         renderExpenses();
         renderCalendar();
       }
     }
 
-    function updateYearFilterDropdown() {
-      const select = document.getElementById('selectedYearFilter');
-      if (!select) return;
+    function updateYearFilterDropdowns() {
+      const headerSelect = document.getElementById('selectedYearFilter');
+      const listSelect = document.getElementById('filterListYear');
       
-      // Extraer años únicos de los gastos
       let years = new Set();
       expenses.forEach(e => {
         let parts = e.date.split('-');
         if (parts.length === 3) years.add(parts[0]);
       });
       
-      let currentVal = select.value;
-      select.innerHTML = '<option value="all">Todos los años</option>';
-      Array.from(years).sort().forEach(y => {
-        select.innerHTML += `<option value="${y}">${y}</option>`;
-      });
+      let sortedYears = Array.from(years).sort();
 
-      if (years.has(currentVal) || currentVal === 'all') {
-        select.value = currentVal;
-      } else {
-        select.value = 'all';
-        activeYearFilter = 'all';
+      if (headerSelect) {
+        let currentHeaderVal = headerSelect.value;
+        headerSelect.innerHTML = '<option value="all">Todos los años</option>';
+        sortedYears.forEach(y => {
+          headerSelect.innerHTML += `<option value="${y}">${y}</option>`;
+        });
+        if (years.has(currentHeaderVal) || currentHeaderVal === 'all') {
+          headerSelect.value = currentHeaderVal;
+        } else {
+          headerSelect.value = 'all';
+          activeYearFilter = 'all';
+        }
+      }
+
+      if (listSelect) {
+        let currentListVal = listSelect.value;
+        listSelect.innerHTML = '<option value="all">Año: Todos</option>';
+        sortedYears.forEach(y => {
+          listSelect.innerHTML += `<option value="${y}">Año: ${y}</option>`;
+        });
+        if (years.has(currentListVal) || currentListVal === 'all') {
+          listSelect.value = currentListVal;
+        } else {
+          listSelect.value = 'all';
+        }
       }
     }
 
@@ -570,7 +613,6 @@
       renderExpenses();
     }
 
-    // Renderizado con filtrado estricto por año seleccionado
     function renderExpenses() {
       const list = document.getElementById('expensesList');
       const countLabel = document.getElementById('expensesCount');
@@ -578,13 +620,15 @@
       const catSummary = document.getElementById('categorySummary');
       const catProgressBar = document.getElementById('categoryProgressBar');
       const chartTitle = document.getElementById('chartTitle');
+      const filterListYear = document.getElementById('filterListYear');
+      const filterListCategory = document.getElementById('filterListCategory');
 
       if (!list) return;
       list.innerHTML = '';
       countLabel.innerText = `${expenses.length} registrados`;
 
       if (chartTitle) {
-        chartTitle.innerText = activeYearFilter === 'all' ? 'Análisis por Categoría (Global)' : `Análisis por Categoría (${activeYearFilter})`;
+        chartTitle.innerText = activeYearFilter === 'all' ? 'Análisis por Categoría (Todos los años)' : `Análisis por Categoría (${activeYearFilter})`;
       }
 
       let totalFilteredAnnual = 0;
@@ -595,48 +639,63 @@
       const badgeBg = currentTheme === 'light' ? 'bg-slate-100 text-slate-700 border border-slate-200' : 'bg-slate-700 text-slate-300';
       const btnActionBg = currentTheme === 'light' ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200' : 'bg-slate-700 hover:bg-slate-600 text-slate-300';
 
+      // Valores seleccionados en el filtro completo de la lista
+      const selectedListYear = filterListYear ? filterListYear.value : 'all';
+      const selectedListCategory = filterListCategory ? filterListCategory.value : 'all';
+
+      let displayedCount = 0;
+
       expenses.forEach(item => {
         let parts = item.date.split('-');
         let itemYear = parts.length === 3 ? parts[0] : '';
 
-        // Cálculo del coste anual del gasto individual
         let mult = item.frequency === 'Anual' ? 1 : item.frequency === 'Semestral' ? 2 : item.frequency === 'Trimestral' ? 4 : item.frequency === 'Mensual' ? 12 : 52;
         let itemAnnualCost = item.amount * mult;
 
-        // Si el filtro de año coincide (o está en 'all'), se incluye en los gráficos y totales filtrados
+        // Cálculo para gráficos (según el selector superior de año)
         if (activeYearFilter === 'all' || itemYear === activeYearFilter) {
           totalFilteredAnnual += itemAnnualCost;
           catTotals[item.category] = (catTotals[item.category] || 0) + itemAnnualCost;
         }
 
-        // Renderizado de la tarjeta del gasto en la lista
-        const card = document.createElement('div');
-        card.className = `${cardBg} p-4 rounded-2xl border flex justify-between items-center transition-colors duration-300`;
-        card.innerHTML = `
-          <div class="space-y-1">
-            <div class="flex items-center space-x-2">
-              <span class="font-bold ${textMain}">${item.title}</span>
-              <span class="text-[10px] px-2 py-0.5 rounded-full ${badgeBg} font-medium">${item.category}</span>
+        // Filtrado para la lista inferior (según el selector de año de la lista y categoría)
+        const matchYear = (selectedListYear === 'all' || itemYear === selectedListYear);
+        const matchCategory = (selectedListCategory === 'all' || item.category === selectedListCategory);
+
+        if (matchYear && matchCategory) {
+          displayedCount++;
+          const card = document.createElement('div');
+          card.className = `${cardBg} p-4 rounded-2xl border flex justify-between items-center transition-colors duration-300`;
+          card.innerHTML = `
+            <div class="space-y-1">
+              <div class="flex items-center space-x-2">
+                <span class="font-bold ${textMain}">${item.title}</span>
+                <span class="text-[10px] px-2 py-0.5 rounded-full ${badgeBg} font-medium">${item.category}</span>
+              </div>
+              <div class="text-xs opacity-70 flex items-center space-x-3">
+                <span>📅 ${item.date}</span>
+                <span>🔄 ${item.frequency}</span>
+              </div>
+              ${item.phone ? `<a href="tel:${item.phone}" class="inline-flex items-center text-xs text-emerald-500 hover:underline">📞 Llamar: ${item.phone}</a>` : ''}
             </div>
-            <div class="text-xs opacity-70 flex items-center space-x-3">
-              <span>📅 ${item.date}</span>
-              <span>🔄 ${item.frequency}</span>
+            <div class="text-right space-y-2">
+              <div class="text-base font-bold text-emerald-500">${item.amount.toFixed(2)} €</div>
+              <div class="flex space-x-1 justify-end">
+                <button onclick="openModal(${item.id})" class="p-1.5 ${btnActionBg} rounded-lg"><i data-feather="edit-2" class="w-3.5 h-3.5"></i></button>
+                <button onclick="deleteExpense(${item.id})" class="p-1.5 ${btnActionBg} hover:bg-red-500/20 text-red-400 rounded-lg"><i data-feather="trash-2" class="w-3.5 h-3.5"></i></button>
+              </div>
             </div>
-            ${item.phone ? `<a href="tel:${item.phone}" class="inline-flex items-center text-xs text-emerald-500 hover:underline">📞 Llamar: ${item.phone}</a>` : ''}
-          </div>
-          <div class="text-right space-y-2">
-            <div class="text-base font-bold text-emerald-500">${item.amount.toFixed(2)} €</div>
-            <div class="flex space-x-1 justify-end">
-              <button onclick="openModal(${item.id})" class="p-1.5 ${btnActionBg} rounded-lg"><i data-feather="edit-2" class="w-3.5 h-3.5"></i></button>
-              <button onclick="deleteExpense(${item.id})" class="p-1.5 ${btnActionBg} hover:bg-red-500/20 text-red-400 rounded-lg"><i data-feather="trash-2" class="w-3.5 h-3.5"></i></button>
-            </div>
-          </div>
-        `;
-        list.appendChild(card);
+          `;
+          list.appendChild(card);
+        }
       });
 
+      if (displayedCount === 0) {
+        list.innerHTML = `<div class="text-center py-6 text-xs opacity-60">No hay gastos que coincidan con los filtros seleccionados.</div>`;
+      }
+
       if (annualTotalHeader) {
-        annualTotalHeader.innerText = activeYearFilter === 'all' ? `${totalFilteredAnnual.toFixed(0)} € / año (Global)` : `${totalFilteredAnnual.toFixed(0)} € (${activeYearFilter})`;
+        annualTotalHeader.innerText = activeYearFilter === 'all' ? `${totalFilteredAnnual.toFixed(0)} € / año` : `${totalFilteredAnnual.toFixed(0)} € (${activeYearFilter})`;
       }
 
       if (catSummary) catSummary.innerHTML = '';
@@ -839,7 +898,7 @@
       };
       expenses.push(duplicated);
       localStorage.setItem('financontrol_expenses', JSON.stringify(expenses));
-      updateYearFilterDropdown();
+      updateYearFilterDropdowns();
       renderExpenses();
       renderCalendar();
       alert(`¡Gasto "${item.title}" renovado para el ${newDate} con éxito!`);
@@ -982,7 +1041,7 @@
           initNotificationUI();
           renderCategoriesSelect();
           renderCategoriesConfig();
-          updateYearFilterDropdown();
+          updateYearFilterDropdowns();
           renderExpenses();
           renderCalendar();
           alert('¡Datos importados con éxito!');
