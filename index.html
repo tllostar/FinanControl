@@ -57,13 +57,44 @@
         <span id="expensesCount" class="text-xs text-slate-400">0 registrados</span>
       </div>
 
-      <!-- Gráfico de distribución por categoría -->
-      <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3">
-        <h3 class="text-sm font-semibold text-slate-300">Distribución de Gastos (Anual)</h3>
-        <div id="categoryProgressBar" class="space-y-2"></div>
+      <!-- Bloque de Gráficos Adaptables -->
+      <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-4">
+        <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+          <h3 class="text-sm font-semibold text-slate-300">Análisis por Categoría</h3>
+          
+          <!-- Selector de Modo de Visualización -->
+          <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-700 gap-1 text-xs">
+            <button id="btnViewBar" onclick="setChartView('bar')" class="px-2.5 py-1 rounded-lg font-medium transition bg-emerald-500 text-white">
+              Barras
+            </button>
+            <button id="btnViewPie" onclick="setChartView('pie')" class="px-2.5 py-1 rounded-lg font-medium transition text-slate-400 hover:text-white">
+              Circular (Pie)
+            </button>
+          </div>
+        </div>
+
+        <!-- Vista 1: Gráficos de Barras -->
+        <div id="viewBarContainer" class="space-y-2">
+          <div id="categoryProgressBar" class="space-y-2"></div>
+        </div>
+
+        <!-- Vista 2: Gráfico Circular (Pie / Donut) -->
+        <div id="viewPieContainer" class="hidden flex-col items-center justify-center space-y-4 py-2">
+          <div class="relative w-44 h-44 flex items-center justify-center">
+            <svg id="pieChartSvg" class="w-full h-full -rotate-90 transform" viewBox="0 0 36 36">
+              <!-- Círculos dinámicos construidos en JS -->
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+              <span class="text-[10px] text-slate-400">Total Anual</span>
+              <span id="pieTotalLabel" class="text-sm font-bold text-emerald-400">0 €</span>
+            </div>
+          </div>
+          <!-- Leyenda del Gráfico Pie -->
+          <div id="pieLegend" class="grid grid-cols-2 gap-2 w-full pt-2 border-t border-slate-700/50"></div>
+        </div>
       </div>
 
-      <!-- Resumen por categoría -->
+      <!-- Resumen en tarjetas por categoría -->
       <div id="categorySummary" class="grid grid-cols-2 gap-2"></div>
 
       <!-- Lista de Gastos -->
@@ -119,16 +150,23 @@
 
       <!-- Notificaciones -->
       <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3">
-        <div class="flex items-center space-x-3">
-          <div class="p-2 bg-emerald-500/20 text-emerald-400 rounded-xl"><i data-feather="bell"></i></div>
-          <div>
-            <h3 class="font-medium text-slate-100">Notificaciones en iPhone</h3>
-            <p class="text-xs text-slate-400">Alertas de llamadas y vencimientos</p>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="p-2 bg-emerald-500/20 text-emerald-400 rounded-xl"><i data-feather="bell"></i></div>
+            <div>
+              <h3 class="font-medium text-slate-100">Notificaciones de la App</h3>
+              <p id="notificationStatusText" class="text-xs text-slate-400">Alertas internas activadas</p>
+            </div>
           </div>
+          <!-- Toggle Switch -->
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="notificationToggle" onchange="toggleNotificationSetting()" class="sr-only peer">
+            <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+          </label>
         </div>
-        <button id="notificationBtn" onclick="toggleNotifications()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-medium text-sm transition">
-          Activar
-        </button>
+        <div id="systemNotificationInfo" class="text-[11px] text-slate-400 border-t border-slate-700/50 pt-2 hidden">
+          Si bloqueaste el permiso global en iOS Safari, puedes reactivarlo en: <i>Ajustes del iPhone > Safari > Notificaciones</i>.
+        </div>
       </div>
 
       <!-- Copias de seguridad -->
@@ -152,7 +190,7 @@
 
   </main>
 
-  <!-- Botón Flotante "+" (Subido más arriba para no tapar la navegación ni configuración) -->
+  <!-- Botón Flotante "+" (Posición elevada para libre navegación) -->
   <button onclick="openModal()" class="fixed right-5 bottom-24 w-14 h-14 bg-emerald-500 hover:bg-emerald-400 text-white rounded-full shadow-2xl flex items-center justify-center z-40 active:scale-95 transition">
     <i data-feather="plus" class="w-7 h-7"></i>
   </button>
@@ -246,12 +284,16 @@
   <script>
     let expenses = JSON.parse(localStorage.getItem('financontrol_expenses')) || [];
     let categories = JSON.parse(localStorage.getItem('financontrol_categories')) || ['Seguros', 'Impuestos', 'Suscripciones', 'Servicios', 'Otros'];
+    let notificationsEnabled = JSON.parse(localStorage.getItem('financontrol_notifications')) ?? true;
+    let currentChartView = 'bar';
     let currentDate = new Date();
     let selectedDayDate = null;
 
+    const categoryColorsHex = ['#10B981', '#3B82F6', '#F59E0B', '#A855F7', '#EC4899', '#14B8A6', '#6366F1'];
+
     document.addEventListener('DOMContentLoaded', () => {
       feather.replace();
-      updateNotificationButtonText();
+      initNotificationUI();
       renderCategoriesSelect();
       renderCategoriesConfig();
       renderExpenses();
@@ -271,6 +313,29 @@
 
       if (tabName === 'calendario') renderCalendar();
       if (tabName === 'configuracion') renderCategoriesConfig();
+    }
+
+    // Alternar entre gráficos Barras vs Pie
+    function setChartView(mode) {
+      currentChartView = mode;
+      const btnBar = document.getElementById('btnViewBar');
+      const btnPie = document.getElementById('btnViewPie');
+      const containerBar = document.getElementById('viewBarContainer');
+      const containerPie = document.getElementById('viewPieContainer');
+
+      if (mode === 'bar') {
+        btnBar.className = 'px-2.5 py-1 rounded-lg font-medium transition bg-emerald-500 text-white';
+        btnPie.className = 'px-2.5 py-1 rounded-lg font-medium transition text-slate-400 hover:text-white';
+        containerBar.classList.remove('hidden');
+        containerPie.classList.add('hidden');
+      } else {
+        btnPie.className = 'px-2.5 py-1 rounded-lg font-medium transition bg-emerald-500 text-white';
+        btnBar.className = 'px-2.5 py-1 rounded-lg font-medium transition text-slate-400 hover:text-white';
+        containerPie.classList.remove('hidden');
+        containerPie.classList.add('flex');
+        containerBar.classList.add('hidden');
+      }
+      renderExpenses();
     }
 
     function renderCategoriesSelect() {
@@ -435,16 +500,16 @@
 
       annualTotalHeader.innerText = `${totalAnnual.toFixed(0)} € / año`;
 
+      // Renderizar Barras
       catSummary.innerHTML = '';
       catProgressBar.innerHTML = '';
-
-      const colors = ['bg-emerald-500', 'bg-blue-500', 'bg-amber-500', 'bg-purple-500', 'bg-pink-500', 'bg-teal-500'];
+      const colorsTailwind = ['bg-emerald-500', 'bg-blue-500', 'bg-amber-500', 'bg-purple-500', 'bg-pink-500', 'bg-teal-500'];
       let colorIndex = 0;
 
       Object.keys(catTotals).forEach(cat => {
         let amount = catTotals[cat];
         let pct = totalAnnual > 0 ? (amount / totalAnnual) * 100 : 0;
-        let barColor = colors[colorIndex % colors.length];
+        let barColor = colorsTailwind[colorIndex % colorsTailwind.length];
         colorIndex++;
 
         catSummary.innerHTML += `
@@ -467,7 +532,59 @@
         `;
       });
 
+      // Renderizar Pie Chart SVG
+      renderPieChart(catTotals, totalAnnual);
       feather.replace();
+    }
+
+    // Cálculo y Renderizado de Gráfico Circular SVG
+    function renderPieChart(catTotals, totalAnnual) {
+      const svg = document.getElementById('pieChartSvg');
+      const legend = document.getElementById('pieLegend');
+      document.getElementById('pieTotalLabel').innerText = `${totalAnnual.toFixed(0)} €`;
+
+      svg.innerHTML = '';
+      legend.innerHTML = '';
+
+      if (totalAnnual === 0) {
+        svg.innerHTML = `<circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#334155" stroke-width="3"></circle>`;
+        legend.innerHTML = `<span class="text-xs text-slate-500 col-span-2 text-center">Sin gastos para calcular el gráfico</span>`;
+        return;
+      }
+
+      let accumulatedPct = 0;
+      let idx = 0;
+
+      Object.keys(catTotals).forEach(cat => {
+        let amount = catTotals[cat];
+        let pct = (amount / totalAnnual) * 100;
+        let strokeColor = categoryColorsHex[idx % categoryColorsHex.length];
+        idx++;
+
+        // Creación del segmento de círculo SVG en viewBox 36x36
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", "18");
+        circle.setAttribute("cy", "18");
+        circle.setAttribute("r", "15.915");
+        circle.setAttribute("fill", "transparent");
+        circle.setAttribute("stroke", strokeColor);
+        circle.setAttribute("stroke-width", "3.8");
+        circle.setAttribute("stroke-dasharray", `${pct} ${100 - pct}`);
+        circle.setAttribute("stroke-dashoffset", `${-accumulatedPct}`);
+        circle.setAttribute("class", "transition-all duration-500");
+        svg.appendChild(circle);
+
+        accumulatedPct += pct;
+
+        // Leyenda del gráfico circular
+        legend.innerHTML += `
+          <div class="flex items-center space-x-2 text-xs">
+            <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: ${strokeColor}"></span>
+            <span class="text-slate-300 truncate">${cat}:</span>
+            <span class="font-bold text-slate-100">${pct.toFixed(0)}%</span>
+          </div>
+        `;
+      });
     }
 
     function renderCalendar() {
@@ -594,29 +711,34 @@
       });
     }
 
-    function updateNotificationButtonText() {
-      const btn = document.getElementById('notificationBtn');
-      if ('Notification' in window) {
-        if (Notification.permission === 'granted') {
-          btn.innerText = 'Desactivar';
-          btn.className = 'w-full py-2.5 bg-red-600/80 hover:bg-red-500 text-white rounded-xl font-medium text-sm transition';
-        } else {
-          btn.innerText = 'Activar';
-          btn.className = 'w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-medium text-sm transition';
-        }
+    // Inicialización y Control de Notificaciones de la App
+    function initNotificationUI() {
+      const toggle = document.getElementById('notificationToggle');
+      const text = document.getElementById('notificationStatusText');
+      const info = document.getElementById('systemNotificationInfo');
+
+      toggle.checked = notificationsEnabled;
+      text.innerText = notificationsEnabled ? 'Alertas internas activadas' : 'Alertas silenciadas en la app';
+
+      if ('Notification' in window && Notification.permission === 'denied') {
+        info.classList.remove('hidden');
       }
     }
 
-    function toggleNotifications() {
-      if ('Notification' in window) {
-        if (Notification.permission === 'granted') {
-          alert('Para desactivarlas, ve a los ajustes de tu iPhone o navegador en los permisos de esta página.');
-        } else {
+    function toggleNotificationSetting() {
+      const toggle = document.getElementById('notificationToggle');
+      notificationsEnabled = toggle.checked;
+      localStorage.setItem('financontrol_notifications', JSON.stringify(notificationsEnabled));
+
+      const text = document.getElementById('notificationStatusText');
+      text.innerText = notificationsEnabled ? 'Alertas internas activadas' : 'Alertas silenciadas en la app';
+
+      if (notificationsEnabled && 'Notification' in window) {
+        if (Notification.permission !== 'granted') {
           Notification.requestPermission().then(perm => {
-            updateNotificationButtonText();
             if (perm === 'granted') {
               new Notification("FinanControl", {
-                body: "¡Notificaciones activadas con éxito!",
+                body: "¡Notificaciones activadas correctamente!",
                 icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='120' fill='%2310b981'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='320' fill='white'>€</text></svg>"
               });
             }
@@ -626,7 +748,7 @@
     }
 
     function exportData() {
-      const backup = { expenses, categories };
+      const backup = { expenses, categories, notificationsEnabled };
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup, null, 2));
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute("href", dataStr);
@@ -649,9 +771,12 @@
           } else if (imported.expenses) {
             expenses = imported.expenses;
             if (imported.categories) categories = imported.categories;
+            if (imported.notificationsEnabled !== undefined) notificationsEnabled = imported.notificationsEnabled;
           }
           localStorage.setItem('financontrol_expenses', JSON.stringify(expenses));
           localStorage.setItem('financontrol_categories', JSON.stringify(categories));
+          localStorage.setItem('financontrol_notifications', JSON.stringify(notificationsEnabled));
+          initNotificationUI();
           renderCategoriesSelect();
           renderCategoriesConfig();
           renderExpenses();
