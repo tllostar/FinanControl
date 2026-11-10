@@ -23,7 +23,6 @@
   <script src="https://unpkg.com/feather-icons"></script>
 
   <style>
-    /* Estilos adaptados para zona segura de iPhone */
     body {
       padding-top: env(safe-area-inset-top);
       padding-bottom: calc(4rem + env(safe-area-inset-bottom));
@@ -49,34 +48,36 @@
   </header>
 
   <!-- Contenido Principal -->
-  <main class="flex-1 p-4 max-w-lg mx-auto w-full">
+  <main class="flex-1 p-4 max-w-lg mx-auto w-full space-y-4">
     
-    <!-- PESTAÑA: RESUMEN DE GASTOS -->
+    <!-- PESTAÑA: GASTOS -->
     <section id="tab-gastos" class="tab-content space-y-4">
       <div class="flex justify-between items-center">
         <h2 class="text-lg font-semibold text-slate-200">Todos tus gastos</h2>
         <span id="expensesCount" class="text-xs text-slate-400">0 registrados</span>
       </div>
 
+      <!-- Gráfico de distribución por categoría -->
+      <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3">
+        <h3 class="text-sm font-semibold text-slate-300">Distribución de Gastos (Anual)</h3>
+        <div id="categoryProgressBar" class="space-y-2"></div>
+      </div>
+
       <!-- Resumen por categoría -->
       <div id="categorySummary" class="grid grid-cols-2 gap-2"></div>
 
       <!-- Lista de Gastos -->
-      <div id="expensesList" class="space-y-3">
-        <!-- Inserción dinámica de gastos -->
-      </div>
+      <div id="expensesList" class="space-y-3"></div>
     </section>
 
     <!-- PESTAÑA: CALENDARIO -->
     <section id="tab-calendario" class="tab-content hidden space-y-4">
-      <!-- Selector de Mes -->
       <div class="flex justify-between items-center bg-slate-800 p-3 rounded-2xl border border-slate-700">
         <button onclick="changeMonth(-1)" class="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200"><i data-feather="chevron-left"></i></button>
         <span id="calendarMonthLabel" class="font-bold text-slate-100"></span>
         <button onclick="changeMonth(1)" class="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200"><i data-feather="chevron-right"></i></button>
       </div>
 
-      <!-- Cuadrícula del Calendario -->
       <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700">
         <div class="grid grid-cols-7 gap-1 text-center text-xs text-slate-400 font-medium mb-2">
           <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
@@ -84,7 +85,6 @@
         <div id="calendarGrid" class="grid grid-cols-7 gap-1"></div>
       </div>
 
-      <!-- Detalle del día seleccionado -->
       <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3">
         <div class="flex justify-between items-center border-b border-slate-700 pb-2">
           <h3 id="selectedDateLabel" class="font-semibold text-slate-200">Selecciona un día</h3>
@@ -97,7 +97,6 @@
         </div>
       </div>
 
-      <!-- Gráfico de carga mensual -->
       <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3">
         <h3 class="text-sm font-semibold text-slate-300">Carga financiera mensual</h3>
         <div id="monthlyChart" class="flex items-end justify-between h-32 gap-1 pt-4"></div>
@@ -108,6 +107,16 @@
     <section id="tab-configuracion" class="tab-content hidden space-y-4">
       <h2 class="text-lg font-semibold text-slate-200">Configuración</h2>
 
+      <!-- Gestión de Categorías -->
+      <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3">
+        <h3 class="font-medium text-slate-100 text-sm">Gestionar Categorías</h3>
+        <div class="flex gap-2">
+          <input type="text" id="newCategoryInput" placeholder="Nueva categoría..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none">
+          <button onclick="addCategory()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-medium">Añadir</button>
+        </div>
+        <div id="categoriesList" class="flex flex-wrap gap-2 pt-2"></div>
+      </div>
+
       <!-- Notificaciones -->
       <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3">
         <div class="flex items-center space-x-3">
@@ -117,8 +126,8 @@
             <p class="text-xs text-slate-400">Alertas de llamadas y vencimientos</p>
           </div>
         </div>
-        <button onclick="requestNotificationPermission()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-medium text-sm transition">
-          Activar o Probar Notificaciones
+        <button id="notificationBtn" onclick="toggleNotifications()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-medium text-sm transition">
+          Activar
         </button>
       </div>
 
@@ -143,12 +152,12 @@
 
   </main>
 
-  <!-- Botón Flotante "+" accesible desde cualquier TAB -->
-  <button onclick="openModal()" class="fixed right-5 bottom-20 w-14 h-14 bg-emerald-500 hover:bg-emerald-400 text-white rounded-full shadow-2xl flex items-center justify-center z-40 active:scale-95 transition">
+  <!-- Botón Flotante "+" (Subido más arriba para no tapar la navegación ni configuración) -->
+  <button onclick="openModal()" class="fixed right-5 bottom-24 w-14 h-14 bg-emerald-500 hover:bg-emerald-400 text-white rounded-full shadow-2xl flex items-center justify-center z-40 active:scale-95 transition">
     <i data-feather="plus" class="w-7 h-7"></i>
   </button>
 
-  <!-- Navegación Inferior Móvil (Bottom Nav) -->
+  <!-- Navegación Inferior -->
   <nav class="fixed bottom-0 left-0 right-0 bg-slate-800/95 backdrop-blur border-t border-slate-700 z-30 pb-safe">
     <div class="flex justify-around items-center h-16 max-w-lg mx-auto">
       <button onclick="switchTab('gastos')" id="nav-gastos" class="nav-btn flex flex-col items-center justify-center w-full h-full text-emerald-400">
@@ -189,13 +198,7 @@
           </div>
           <div>
             <label class="block text-xs text-slate-400 mb-1">Categoría</label>
-            <select id="expenseCategory" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none">
-              <option value="Seguros">Seguros</option>
-              <option value="Impuestos">Impuestos</option>
-              <option value="Suscripciones">Suscripciones</option>
-              <option value="Servicios">Servicios</option>
-              <option value="Otros">Otros</option>
-            </select>
+            <select id="expenseCategory" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none"></select>
           </div>
         </div>
 
@@ -207,6 +210,7 @@
               <option value="Semestral">Semestral</option>
               <option value="Trimestral">Trimestral</option>
               <option value="Mensual">Mensual</option>
+              <option value="Semanal">Semanal</option>
             </select>
           </div>
           <div>
@@ -221,7 +225,7 @@
             <input type="tel" id="expensePhone" placeholder="ej. 900123456" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none">
           </div>
           <div>
-            <label class="block text-xs text-slate-400 mb-1">Preaviso Llamada</label>
+            <label class="block text-xs text-slate-400 mb-1">Avisar</label>
             <select id="expenseNotice" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none">
               <option value="7">7 días antes</option>
               <option value="15">15 días antes</option>
@@ -239,19 +243,21 @@
     </div>
   </div>
 
-  <!-- Lógica en JavaScript -->
   <script>
     let expenses = JSON.parse(localStorage.getItem('financontrol_expenses')) || [];
+    let categories = JSON.parse(localStorage.getItem('financontrol_categories')) || ['Seguros', 'Impuestos', 'Suscripciones', 'Servicios', 'Otros'];
     let currentDate = new Date();
     let selectedDayDate = null;
 
     document.addEventListener('DOMContentLoaded', () => {
       feather.replace();
+      updateNotificationButtonText();
+      renderCategoriesSelect();
+      renderCategoriesConfig();
       renderExpenses();
       renderCalendar();
     });
 
-    // Cambio de Pestañas
     function switchTab(tabName) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.querySelectorAll('.nav-btn').forEach(el => {
@@ -264,13 +270,59 @@
       document.getElementById(`nav-${tabName}`).classList.remove('text-slate-400');
 
       if (tabName === 'calendario') renderCalendar();
+      if (tabName === 'configuracion') renderCategoriesConfig();
     }
 
-    // Modal
+    function renderCategoriesSelect() {
+      const select = document.getElementById('expenseCategory');
+      select.innerHTML = '';
+      categories.forEach(cat => {
+        select.innerHTML += `<option value="${cat}">${cat}</option>`;
+      });
+    }
+
+    function renderCategoriesConfig() {
+      const list = document.getElementById('categoriesList');
+      list.innerHTML = '';
+      categories.forEach(cat => {
+        list.innerHTML += `
+          <div class="flex items-center bg-slate-700 px-3 py-1.5 rounded-xl text-xs gap-2 text-slate-200">
+            <span>${cat}</span>
+            ${categories.length > 1 ? `<button onclick="deleteCategory('${cat}')" class="text-red-400 hover:text-red-300"><i data-feather="x" class="w-3.5 h-3.5"></i></button>` : ''}
+          </div>
+        `;
+      });
+      feather.replace();
+    }
+
+    function addCategory() {
+      const input = document.getElementById('newCategoryInput');
+      const val = input.value.trim();
+      if (val && !categories.includes(val)) {
+        categories.push(val);
+        localStorage.setItem('financontrol_categories', JSON.stringify(categories));
+        input.value = '';
+        renderCategoriesSelect();
+        renderCategoriesConfig();
+        renderExpenses();
+      }
+    }
+
+    function deleteCategory(cat) {
+      if (confirm(`¿Eliminar la categoría "${cat}"?`)) {
+        categories = categories.filter(c => c !== cat);
+        localStorage.setItem('financontrol_categories', JSON.stringify(categories));
+        renderCategoriesSelect();
+        renderCategoriesConfig();
+        renderExpenses();
+      }
+    }
+
     function openModal(editId = null) {
       const modal = document.getElementById('expenseModal');
       const form = document.getElementById('expenseForm');
       modal.classList.remove('hidden');
+      renderCategoriesSelect();
 
       if (editId) {
         const item = expenses.find(e => e.id === editId);
@@ -301,7 +353,6 @@
       document.getElementById('expenseModal').classList.add('hidden');
     }
 
-    // Operaciones CRUD
     function saveExpense(e) {
       e.preventDefault();
       const id = document.getElementById('expenseId').value;
@@ -337,25 +388,25 @@
       }
     }
 
-    // Renderizar Lista y Resumen de Gastos
     function renderExpenses() {
       const list = document.getElementById('expensesList');
       const countLabel = document.getElementById('expensesCount');
       const annualTotalHeader = document.getElementById('annualTotalHeader');
       const catSummary = document.getElementById('categorySummary');
+      const catProgressBar = document.getElementById('categoryProgressBar');
 
       list.innerHTML = '';
       countLabel.innerText = `${expenses.length} registrados`;
 
       let totalAnnual = 0;
-      let categories = {};
+      let catTotals = {};
 
       expenses.forEach(item => {
-        let annualMultiplier = item.frequency === 'Anual' ? 1 : item.frequency === 'Semestral' ? 2 : item.frequency === 'Trimestral' ? 4 : 12;
-        let itemAnnualCost = item.amount * annualMultiplier;
+        let mult = item.frequency === 'Anual' ? 1 : item.frequency === 'Semestral' ? 2 : item.frequency === 'Trimestral' ? 4 : item.frequency === 'Mensual' ? 12 : 52;
+        let itemAnnualCost = item.amount * mult;
         totalAnnual += itemAnnualCost;
 
-        categories[item.category] = (categories[item.category] || 0) + itemAnnualCost;
+        catTotals[item.category] = (catTotals[item.category] || 0) + itemAnnualCost;
 
         const card = document.createElement('div');
         card.className = 'bg-slate-800 p-4 rounded-2xl border border-slate-700 flex justify-between items-center';
@@ -384,13 +435,34 @@
 
       annualTotalHeader.innerText = `${totalAnnual.toFixed(0)} € / año`;
 
-      // Tarjetas por categoría
       catSummary.innerHTML = '';
-      Object.keys(categories).forEach(cat => {
+      catProgressBar.innerHTML = '';
+
+      const colors = ['bg-emerald-500', 'bg-blue-500', 'bg-amber-500', 'bg-purple-500', 'bg-pink-500', 'bg-teal-500'];
+      let colorIndex = 0;
+
+      Object.keys(catTotals).forEach(cat => {
+        let amount = catTotals[cat];
+        let pct = totalAnnual > 0 ? (amount / totalAnnual) * 100 : 0;
+        let barColor = colors[colorIndex % colors.length];
+        colorIndex++;
+
         catSummary.innerHTML += `
           <div class="bg-slate-800 p-3 rounded-xl border border-slate-700">
             <div class="text-xs text-slate-400">${cat}</div>
-            <div class="text-sm font-bold text-slate-200">${categories[cat].toFixed(0)} €/año</div>
+            <div class="text-sm font-bold text-slate-200">${amount.toFixed(0)} €/año <span class="text-[10px] text-slate-400 font-normal">(${pct.toFixed(1)}%)</span></div>
+          </div>
+        `;
+
+        catProgressBar.innerHTML += `
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-300 font-medium">${cat}</span>
+              <span class="text-slate-400">${amount.toFixed(0)} € (${pct.toFixed(1)}%)</span>
+            </div>
+            <div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden">
+              <div class="${barColor} h-full rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+            </div>
           </div>
         `;
       });
@@ -398,7 +470,6 @@
       feather.replace();
     }
 
-    // Renderizar Calendario y Carga Mensual
     function renderCalendar() {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
@@ -423,14 +494,11 @@
         dayCell.className = `h-10 rounded-xl flex flex-col items-center justify-center text-xs relative border border-transparent transition ${selectedDayDate === dateStr ? 'border-emerald-400 bg-slate-700' : 'bg-slate-900/50 hover:bg-slate-700'}`;
         dayCell.innerHTML = `<span>${day}</span>`;
 
-        // Marcas de cobro o aviso
         let hasCharge = false;
         let hasNotice = false;
 
         expenses.forEach(e => {
           if (e.date === dateStr) hasCharge = true;
-          
-          // Calcular fecha de preaviso
           let chargeDate = new Date(e.date);
           chargeDate.setDate(chargeDate.getDate() - (e.notice || 30));
           if (chargeDate.toISOString().split('T')[0] === dateStr) hasNotice = true;
@@ -513,8 +581,8 @@
       });
 
       let max = Math.max(...monthlyTotals, 100);
-
       const monthsShort = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+      
       monthlyTotals.forEach((val, idx) => {
         let heightPct = (val / max) * 100;
         chart.innerHTML += `
@@ -526,27 +594,40 @@
       });
     }
 
-    // Notificaciones Web
-    function requestNotificationPermission() {
+    function updateNotificationButtonText() {
+      const btn = document.getElementById('notificationBtn');
       if ('Notification' in window) {
-        Notification.requestPermission().then(perm => {
-          if (perm === 'granted') {
-            new Notification("FinanControl", {
-              body: "¡Las notificaciones están activadas correctamente en tu teléfono!",
-              icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='120' fill='%2310b981'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='320' fill='white'>€</text></svg>"
-            });
-          } else {
-            alert('Por favor autoriza las notificaciones desde los ajustes de Safari/iOS.');
-          }
-        });
-      } else {
-        alert('Este navegador no soporta Web Notifications API.');
+        if (Notification.permission === 'granted') {
+          btn.innerText = 'Desactivar';
+          btn.className = 'w-full py-2.5 bg-red-600/80 hover:bg-red-500 text-white rounded-xl font-medium text-sm transition';
+        } else {
+          btn.innerText = 'Activar';
+          btn.className = 'w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-medium text-sm transition';
+        }
       }
     }
 
-    // Exportar / Importar JSON
+    function toggleNotifications() {
+      if ('Notification' in window) {
+        if (Notification.permission === 'granted') {
+          alert('Para desactivarlas, ve a los ajustes de tu iPhone o navegador en los permisos de esta página.');
+        } else {
+          Notification.requestPermission().then(perm => {
+            updateNotificationButtonText();
+            if (perm === 'granted') {
+              new Notification("FinanControl", {
+                body: "¡Notificaciones activadas con éxito!",
+                icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='120' fill='%2310b981'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='320' fill='white'>€</text></svg>"
+              });
+            }
+          });
+        }
+      }
+    }
+
     function exportData() {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(expenses, null, 2));
+      const backup = { expenses, categories };
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup, null, 2));
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute("href", dataStr);
       downloadAnchor.setAttribute("download", `financontrol_backup_${new Date().toISOString().split('T')[0]}.json`);
@@ -565,11 +646,17 @@
           const imported = JSON.parse(e.target.result);
           if (Array.isArray(imported)) {
             expenses = imported;
-            localStorage.setItem('financontrol_expenses', JSON.stringify(expenses));
-            renderExpenses();
-            renderCalendar();
-            alert('¡Datos importados con éxito!');
+          } else if (imported.expenses) {
+            expenses = imported.expenses;
+            if (imported.categories) categories = imported.categories;
           }
+          localStorage.setItem('financontrol_expenses', JSON.stringify(expenses));
+          localStorage.setItem('financontrol_categories', JSON.stringify(categories));
+          renderCategoriesSelect();
+          renderCategoriesConfig();
+          renderExpenses();
+          renderCalendar();
+          alert('¡Datos importados con éxito!');
         } catch (err) {
           alert('El archivo seleccionado no tiene un formato JSON válido.');
         }
