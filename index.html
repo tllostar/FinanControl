@@ -36,8 +36,15 @@
       <div class="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center font-bold text-white shadow-lg shadow-emerald-500/30">€</div>
       <h1 class="text-xl font-bold tracking-tight">FinanControl</h1>
     </div>
-    <div id="annualTotalHeader" class="text-xs bg-slate-700 px-3 py-1.5 rounded-full text-emerald-400 font-semibold border border-slate-600">
-      0 € / año
+    
+    <!-- Selector de Año en Cabecera -->
+    <div class="flex items-center gap-2">
+      <select id="selectedYearFilter" onchange="changeActiveYear(this.value)" class="text-xs bg-slate-700 px-2.5 py-1.5 rounded-xl text-emerald-400 font-semibold border border-slate-600 focus:outline-none focus:border-emerald-500">
+        <option value="all">Todos los años</option>
+      </select>
+      <div id="annualTotalHeader" class="text-xs bg-slate-700 px-3 py-1.5 rounded-full text-emerald-400 font-semibold border border-slate-600">
+        0 € / año
+      </div>
     </div>
   </header>
 
@@ -54,7 +61,7 @@
       <!-- Bloque de Gráficos Adaptables -->
       <div id="cardChart" class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-4 transition-colors duration-300 shadow-sm">
         <div class="flex justify-between items-center border-b border-slate-700 pb-3" id="chartHeaderBorder">
-          <h3 class="text-sm font-semibold">Análisis por Categoría</h3>
+          <h3 id="chartTitle" class="text-sm font-semibold">Análisis por Categoría</h3>
           <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-700 gap-1 text-xs" id="chartSwitcherBg">
             <button id="btnViewBar" onclick="setChartView('bar')" class="px-2.5 py-1 rounded-lg font-medium transition bg-emerald-500 text-white">
               Barras
@@ -73,7 +80,7 @@
           <div class="relative w-44 h-44 flex items-center justify-center">
             <svg id="pieChartSvg" class="w-full h-full -rotate-90 transform" viewBox="0 0 36 36"></svg>
             <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <span class="text-[10px] opacity-70">Total Anual</span>
+              <span class="text-[10px] opacity-70">Total Filtrado</span>
               <span id="pieTotalLabel" class="text-sm font-bold text-emerald-500">0 €</span>
             </div>
           </div>
@@ -284,6 +291,7 @@
     let notificationsEnabled = JSON.parse(localStorage.getItem('financontrol_notifications')) ?? true;
     let currentTheme = localStorage.getItem('financontrol_theme') || 'dark';
     let currentChartView = 'bar';
+    let activeYearFilter = 'all';
     let currentDate = new Date();
     let selectedDayDate = null;
 
@@ -295,6 +303,7 @@
       initNotificationUI();
       renderCategoriesSelect();
       renderCategoriesConfig();
+      updateYearFilterDropdown();
       renderExpenses();
       renderCalendar();
     });
@@ -315,7 +324,6 @@
       if (tabName === 'configuracion') renderCategoriesConfig();
     }
 
-    // Sistema de Temas (Claro / Oscuro) con total soporte visual
     function applyTheme(theme, save = true) {
       currentTheme = theme;
       if (save) localStorage.setItem('financontrol_theme', theme);
@@ -328,7 +336,7 @@
       const statusText = document.getElementById('themeStatusText');
       const themeIcon = document.getElementById('themeIcon');
 
-      toggle.checked = (theme === 'light');
+      if (toggle) toggle.checked = (theme === 'light');
 
       const cards = [
         document.getElementById('cardChart'),
@@ -344,11 +352,11 @@
 
       if (theme === 'light') {
         body.className = 'bg-slate-100 text-slate-900 min-h-screen font-sans flex flex-col transition-colors duration-300';
-        header.className = 'bg-white/95 backdrop-blur border-b border-slate-200 sticky top-0 z-30 px-4 py-3 flex justify-between items-center transition-colors duration-300 shadow-sm';
-        nav.className = 'fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-slate-200 z-30 pb-safe transition-colors duration-300 shadow-lg';
-        modalBox.className = 'bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-slate-200 p-6 space-y-4 max-h-[90vh] overflow-y-auto transition-colors duration-300 text-slate-900 shadow-xl';
-        statusText.innerText = 'Modo Claro activado';
-        themeIcon.setAttribute('data-feather', 'sun');
+        if(header) header.className = 'bg-white/95 backdrop-blur border-b border-slate-200 sticky top-0 z-30 px-4 py-3 flex justify-between items-center transition-colors duration-300 shadow-sm';
+        if(nav) nav.className = 'fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-slate-200 z-30 pb-safe transition-colors duration-300 shadow-lg';
+        if(modalBox) modalBox.className = 'bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-slate-200 p-6 space-y-4 max-h-[90vh] overflow-y-auto transition-colors duration-300 text-slate-900 shadow-xl';
+        if(statusText) statusText.innerText = 'Modo Claro activado';
+        if(themeIcon) themeIcon.setAttribute('data-feather', 'sun');
 
         cards.forEach(c => {
           if(c) {
@@ -357,11 +365,11 @@
         });
       } else {
         body.className = 'bg-slate-900 text-slate-100 min-h-screen font-sans flex flex-col transition-colors duration-300';
-        header.className = 'bg-slate-800/90 backdrop-blur border-b border-slate-700 sticky top-0 z-30 px-4 py-3 flex justify-between items-center transition-colors duration-300';
-        nav.className = 'fixed bottom-0 left-0 right-0 bg-slate-800/95 backdrop-blur border-t border-slate-700 z-30 pb-safe transition-colors duration-300';
-        modalBox.className = 'bg-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-slate-700 p-6 space-y-4 max-h-[90vh] overflow-y-auto transition-colors duration-300 text-slate-100 shadow-xl';
-        statusText.innerText = 'Modo Oscuro activado';
-        themeIcon.setAttribute('data-feather', 'moon');
+        if(header) header.className = 'bg-slate-800/90 backdrop-blur border-b border-slate-700 sticky top-0 z-30 px-4 py-3 flex justify-between items-center transition-colors duration-300';
+        if(nav) nav.className = 'fixed bottom-0 left-0 right-0 bg-slate-800/95 backdrop-blur border-t border-slate-700 z-30 pb-safe transition-colors duration-300';
+        if(modalBox) modalBox.className = 'bg-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-slate-700 p-6 space-y-4 max-h-[90vh] overflow-y-auto transition-colors duration-300 text-slate-100 shadow-xl';
+        if(statusText) statusText.innerText = 'Modo Oscuro activado';
+        if(themeIcon) themeIcon.setAttribute('data-feather', 'moon');
 
         cards.forEach(c => {
           if(c) {
@@ -402,6 +410,7 @@
 
     function renderCategoriesSelect() {
       const select = document.getElementById('expenseCategory');
+      if (!select) return;
       select.innerHTML = '';
       categories.forEach(cat => {
         select.innerHTML += `<option value="${cat}">${cat}</option>`;
@@ -410,6 +419,7 @@
 
     function renderCategoriesConfig() {
       const list = document.getElementById('categoriesList');
+      if (!list) return;
       list.innerHTML = '';
       categories.forEach(cat => {
         const badgeClass = currentTheme === 'light' ? 'bg-slate-100 text-slate-800 border border-slate-200' : 'bg-slate-700 text-slate-200';
@@ -425,6 +435,7 @@
 
     function addCategory() {
       const input = document.getElementById('newCategoryInput');
+      if (!input) return;
       const val = input.value.trim();
       if (val && !categories.includes(val)) {
         categories.push(val);
@@ -514,6 +525,7 @@
 
       localStorage.setItem('financontrol_expenses', JSON.stringify(expenses));
       closeModal();
+      updateYearFilterDropdown();
       renderExpenses();
       renderCalendar();
     }
@@ -522,23 +534,60 @@
       if (confirm('¿Deseas eliminar este gasto?')) {
         expenses = expenses.filter(e => e.id !== id);
         localStorage.setItem('financontrol_expenses', JSON.stringify(expenses));
+        updateYearFilterDropdown();
         renderExpenses();
         renderCalendar();
       }
     }
 
-    // Renderizado de Gastos (Calculando coste anual global)
+    function updateYearFilterDropdown() {
+      const select = document.getElementById('selectedYearFilter');
+      if (!select) return;
+      
+      // Extraer años únicos de los gastos
+      let years = new Set();
+      expenses.forEach(e => {
+        let parts = e.date.split('-');
+        if (parts.length === 3) years.add(parts[0]);
+      });
+      
+      let currentVal = select.value;
+      select.innerHTML = '<option value="all">Todos los años</option>';
+      Array.from(years).sort().forEach(y => {
+        select.innerHTML += `<option value="${y}">${y}</option>`;
+      });
+
+      if (years.has(currentVal) || currentVal === 'all') {
+        select.value = currentVal;
+      } else {
+        select.value = 'all';
+        activeYearFilter = 'all';
+      }
+    }
+
+    function changeActiveYear(val) {
+      activeYearFilter = val;
+      renderExpenses();
+    }
+
+    // Renderizado con filtrado estricto por año seleccionado
     function renderExpenses() {
       const list = document.getElementById('expensesList');
       const countLabel = document.getElementById('expensesCount');
       const annualTotalHeader = document.getElementById('annualTotalHeader');
       const catSummary = document.getElementById('categorySummary');
       const catProgressBar = document.getElementById('categoryProgressBar');
+      const chartTitle = document.getElementById('chartTitle');
 
+      if (!list) return;
       list.innerHTML = '';
       countLabel.innerText = `${expenses.length} registrados`;
 
-      let totalAnnual = 0;
+      if (chartTitle) {
+        chartTitle.innerText = activeYearFilter === 'all' ? 'Análisis por Categoría (Global)' : `Análisis por Categoría (${activeYearFilter})`;
+      }
+
+      let totalFilteredAnnual = 0;
       let catTotals = {};
 
       const cardBg = currentTheme === 'light' ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-800 border-slate-700';
@@ -547,12 +596,20 @@
       const btnActionBg = currentTheme === 'light' ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200' : 'bg-slate-700 hover:bg-slate-600 text-slate-300';
 
       expenses.forEach(item => {
+        let parts = item.date.split('-');
+        let itemYear = parts.length === 3 ? parts[0] : '';
+
+        // Cálculo del coste anual del gasto individual
         let mult = item.frequency === 'Anual' ? 1 : item.frequency === 'Semestral' ? 2 : item.frequency === 'Trimestral' ? 4 : item.frequency === 'Mensual' ? 12 : 52;
         let itemAnnualCost = item.amount * mult;
-        totalAnnual += itemAnnualCost;
 
-        catTotals[item.category] = (catTotals[item.category] || 0) + itemAnnualCost;
+        // Si el filtro de año coincide (o está en 'all'), se incluye en los gráficos y totales filtrados
+        if (activeYearFilter === 'all' || itemYear === activeYearFilter) {
+          totalFilteredAnnual += itemAnnualCost;
+          catTotals[item.category] = (catTotals[item.category] || 0) + itemAnnualCost;
+        }
 
+        // Renderizado de la tarjeta del gasto en la lista
         const card = document.createElement('div');
         card.className = `${cardBg} p-4 rounded-2xl border flex justify-between items-center transition-colors duration-300`;
         card.innerHTML = `
@@ -578,55 +635,64 @@
         list.appendChild(card);
       });
 
-      annualTotalHeader.innerText = `${totalAnnual.toFixed(0)} € / año`;
+      if (annualTotalHeader) {
+        annualTotalHeader.innerText = activeYearFilter === 'all' ? `${totalFilteredAnnual.toFixed(0)} € / año (Global)` : `${totalFilteredAnnual.toFixed(0)} € (${activeYearFilter})`;
+      }
 
-      catSummary.innerHTML = '';
-      catProgressBar.innerHTML = '';
+      if (catSummary) catSummary.innerHTML = '';
+      if (catProgressBar) catProgressBar.innerHTML = '';
       const colorsTailwind = ['bg-emerald-500', 'bg-blue-500', 'bg-amber-500', 'bg-purple-500', 'bg-pink-500', 'bg-teal-500'];
       let colorIndex = 0;
 
       Object.keys(catTotals).forEach(cat => {
         let amount = catTotals[cat];
-        let pct = totalAnnual > 0 ? (amount / totalAnnual) * 100 : 0;
+        let pct = totalFilteredAnnual > 0 ? (amount / totalFilteredAnnual) * 100 : 0;
         let barColor = colorsTailwind[colorIndex % colorsTailwind.length];
         colorIndex++;
 
-        catSummary.innerHTML += `
-          <div class="${cardBg} p-3 rounded-xl border transition-colors duration-300">
-            <div class="text-xs opacity-70">${cat}</div>
-            <div class="text-sm font-bold ${textMain}">${amount.toFixed(0)} €/año <span class="text-[10px] opacity-60 font-normal">(${pct.toFixed(1)}%)</span></div>
-          </div>
-        `;
+        if (catSummary) {
+          catSummary.innerHTML += `
+            <div class="${cardBg} p-3 rounded-xl border transition-colors duration-300">
+              <div class="text-xs opacity-70">${cat}</div>
+              <div class="text-sm font-bold ${textMain}">${amount.toFixed(0)} € <span class="text-[10px] opacity-60 font-normal">(${pct.toFixed(1)}%)</span></div>
+            </div>
+          `;
+        }
 
         const progBg = currentTheme === 'light' ? 'bg-slate-200' : 'bg-slate-900';
-        catProgressBar.innerHTML += `
-          <div class="space-y-1">
-            <div class="flex justify-between text-xs">
-              <span class="${textMain} font-medium">${cat}</span>
-              <span class="opacity-70">${amount.toFixed(0)} € (${pct.toFixed(1)}%)</span>
+        if (catProgressBar) {
+          catProgressBar.innerHTML += `
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs">
+                <span class="${textMain} font-medium">${cat}</span>
+                <span class="opacity-70">${amount.toFixed(0)} € (${pct.toFixed(1)}%)</span>
+              </div>
+              <div class="w-full ${progBg} h-2.5 rounded-full overflow-hidden">
+                <div class="${barColor} h-full rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+              </div>
             </div>
-            <div class="w-full ${progBg} h-2.5 rounded-full overflow-hidden">
-              <div class="${barColor} h-full rounded-full transition-all duration-500" style="width: ${pct}%"></div>
-            </div>
-          </div>
-        `;
+          `;
+        }
       });
 
-      renderPieChart(catTotals, totalAnnual);
+      renderPieChart(catTotals, totalFilteredAnnual);
       feather.replace();
     }
 
-    function renderPieChart(catTotals, totalAnnual) {
+    function renderPieChart(catTotals, totalFilteredAnnual) {
       const svg = document.getElementById('pieChartSvg');
       const legend = document.getElementById('pieLegend');
-      document.getElementById('pieTotalLabel').innerText = `${totalAnnual.toFixed(0)} €`;
+      const totalLabel = document.getElementById('pieTotalLabel');
+      if (!svg || !legend) return;
+
+      if (totalLabel) totalLabel.innerText = `${totalFilteredAnnual.toFixed(0)} €`;
 
       svg.innerHTML = '';
       legend.innerHTML = '';
 
-      if (totalAnnual === 0) {
+      if (totalFilteredAnnual === 0) {
         svg.innerHTML = `<circle cx="18" cy="18" r="15.915" fill="transparent" stroke="${currentTheme === 'light' ? '#cbd5e1' : '#334155'}" stroke-width="3"></circle>`;
-        legend.innerHTML = `<span class="text-xs opacity-60 col-span-2 text-center">Sin gastos para calcular el gráfico</span>`;
+        legend.innerHTML = `<span class="text-xs opacity-60 col-span-2 text-center">Sin gastos para este año</span>`;
         return;
       }
 
@@ -635,7 +701,7 @@
 
       Object.keys(catTotals).forEach(cat => {
         let amount = catTotals[cat];
-        let pct = (amount / totalAnnual) * 100;
+        let pct = (amount / totalFilteredAnnual) * 100;
         let strokeColor = categoryColorsHex[idx % categoryColorsHex.length];
         idx++;
 
@@ -664,15 +730,16 @@
       });
     }
 
-    // Calendario y Sugerencias Anuales Inteligentes
     function renderCalendar() {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
 
       const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-      document.getElementById('calendarMonthLabel').innerText = `${monthNames[month]} ${year}`;
+      const monthLabel = document.getElementById('calendarMonthLabel');
+      if (monthLabel) monthLabel.innerText = `${monthNames[month]} ${year}`;
 
       const grid = document.getElementById('calendarGrid');
+      if (!grid) return;
       grid.innerHTML = '';
 
       const firstDay = new Date(year, month, 1).getDay();
@@ -721,12 +788,11 @@
       renderMonthlyChart(year);
     }
 
-    // Genera sugerencias si hubo gastos en este mismo mes de años anteriores
     function renderRenewalSuggestions(year, monthNum) {
       const container = document.getElementById('renewalSuggestionsContainer');
+      if (!container) return;
       container.innerHTML = '';
 
-      // Buscar gastos que ocurrieron en este mes pero en un año anterior
       const suggestions = expenses.filter(e => {
         const parts = e.date.split('-');
         if (parts.length === 3) {
@@ -747,7 +813,6 @@
 
       let html = `<div class="text-xs font-semibold opacity-80 px-1">💡 Sugerencias de renovación para este mes:</div>`;
       suggestions.forEach(item => {
-        // Sugerir la misma fecha pero adaptada al año actual
         const dayPart = item.date.split('-')[2];
         const suggestedDate = `${year}-${String(monthNum).padStart(2, '0')}-${dayPart}`;
 
@@ -774,6 +839,7 @@
       };
       expenses.push(duplicated);
       localStorage.setItem('financontrol_expenses', JSON.stringify(expenses));
+      updateYearFilterDropdown();
       renderExpenses();
       renderCalendar();
       alert(`¡Gasto "${item.title}" renovado para el ${newDate} con éxito!`);
@@ -786,9 +852,11 @@
 
     function selectDay(dateStr) {
       selectedDayDate = dateStr;
-      document.getElementById('selectedDateLabel').innerText = `Detalle: ${dateStr}`;
+      const dateLabel = document.getElementById('selectedDateLabel');
+      if (dateLabel) dateLabel.innerText = `Detalle: ${dateStr}`;
       
       const dayEventsList = document.getElementById('dayEventsList');
+      if (!dayEventsList) return;
       dayEventsList.innerHTML = '';
 
       let dayEvents = [];
@@ -831,10 +899,11 @@
       openModal();
     }
 
-    // Gráfico de carga mensual filtrando estrictamente por el año seleccionado en el calendario
     function renderMonthlyChart(year) {
-      document.getElementById('monthlyChartTitle').innerText = `Carga financiera mensual (${year})`;
+      const title = document.getElementById('monthlyChartTitle');
+      if (title) title.innerText = `Carga financiera mensual (${year})`;
       const chart = document.getElementById('monthlyChart');
+      if (!chart) return;
       chart.innerHTML = '';
       let monthlyTotals = new Array(12).fill(0);
 
@@ -866,16 +935,18 @@
     function initNotificationUI() {
       const toggle = document.getElementById('notificationToggle');
       const text = document.getElementById('notificationStatusText');
+      if (!toggle || !text) return;
       toggle.checked = notificationsEnabled;
       text.innerText = notificationsEnabled ? 'Alertas internas activadas' : 'Alertas silenciadas en la app';
     }
 
     function toggleNotificationSetting() {
       const toggle = document.getElementById('notificationToggle');
+      if (!toggle) return;
       notificationsEnabled = toggle.checked;
       localStorage.setItem('financontrol_notifications', JSON.stringify(notificationsEnabled));
       const text = document.getElementById('notificationStatusText');
-      text.innerText = notificationsEnabled ? 'Alertas internas activadas' : 'Alertas silenciadas en la app';
+      if (text) text.innerText = notificationsEnabled ? 'Alertas internas activadas' : 'Alertas silenciadas en la app';
     }
 
     function exportData() {
@@ -911,6 +982,7 @@
           initNotificationUI();
           renderCategoriesSelect();
           renderCategoriesConfig();
+          updateYearFilterDropdown();
           renderExpenses();
           renderCalendar();
           alert('¡Datos importados con éxito!');
