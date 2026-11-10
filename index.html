@@ -5,21 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>FinanControl</title>
   
-  <!-- Configuración PWA y iOS -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="FinanControl">
   <meta name="theme-color" content="#10B981">
   
-  <!-- Icono PWA iOS (Verde con símbolo €) -->
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='120' fill='%2310b981'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='320' fill='white'>€</text></svg>">
-
-  <!-- Manifest Inline vía Data URI -->
   <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22FinanControl%22%2C%22short_name%22%3A%22FinanControl%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230f172a%22%2C%22theme_color%22%3A%22%2310b981%22%7D">
 
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Feather Icons -->
   <script src="https://unpkg.com/feather-icons"></script>
 
   <style>
@@ -37,7 +31,7 @@
 <body id="appBody" class="bg-slate-900 text-slate-100 min-h-screen font-sans flex flex-col transition-colors duration-300">
 
   <!-- Encabezado -->
-  <header id="appHeader" class="bg-slate-800/80 backdrop-blur border-b border-slate-700 sticky top-0 z-30 px-4 py-3 flex justify-between items-center transition-colors duration-300">
+  <header id="appHeader" class="bg-slate-800/90 backdrop-blur border-b border-slate-700 sticky top-0 z-30 px-4 py-3 flex justify-between items-center transition-colors duration-300">
     <div class="flex items-center space-x-2">
       <div class="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center font-bold text-white shadow-lg shadow-emerald-500/30">€</div>
       <h1 class="text-xl font-bold tracking-tight">FinanControl</h1>
@@ -58,65 +52,61 @@
       </div>
 
       <!-- Bloque de Gráficos Adaptables -->
-      <div id="cardChart" class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-4 transition-colors duration-300">
+      <div id="cardChart" class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-4 transition-colors duration-300 shadow-sm">
         <div class="flex justify-between items-center border-b border-slate-700 pb-3" id="chartHeaderBorder">
           <h3 class="text-sm font-semibold">Análisis por Categoría</h3>
-          
-          <!-- Selector de Modo de Visualización -->
           <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-700 gap-1 text-xs" id="chartSwitcherBg">
             <button id="btnViewBar" onclick="setChartView('bar')" class="px-2.5 py-1 rounded-lg font-medium transition bg-emerald-500 text-white">
               Barras
             </button>
             <button id="btnViewPie" onclick="setChartView('pie')" class="px-2.5 py-1 rounded-lg font-medium transition opacity-70 hover:opacity-100">
-              Circular (Pie)
+              Circular
             </button>
           </div>
         </div>
 
-        <!-- Vista 1: Gráficos de Barras -->
         <div id="viewBarContainer" class="space-y-2">
           <div id="categoryProgressBar" class="space-y-2"></div>
         </div>
 
-        <!-- Vista 2: Gráfico Circular (Pie / Donut) -->
         <div id="viewPieContainer" class="hidden flex-col items-center justify-center space-y-4 py-2">
           <div class="relative w-44 h-44 flex items-center justify-center">
             <svg id="pieChartSvg" class="w-full h-full -rotate-90 transform" viewBox="0 0 36 36"></svg>
             <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
               <span class="text-[10px] opacity-70">Total Anual</span>
-              <span id="pieTotalLabel" class="text-sm font-bold text-emerald-400">0 €</span>
+              <span id="pieTotalLabel" class="text-sm font-bold text-emerald-500">0 €</span>
             </div>
           </div>
           <div id="pieLegend" class="grid grid-cols-2 gap-2 w-full pt-2 border-t border-slate-700/50"></div>
         </div>
       </div>
 
-      <!-- Resumen en tarjetas por categoría -->
       <div id="categorySummary" class="grid grid-cols-2 gap-2"></div>
-
-      <!-- Lista de Gastos -->
       <div id="expensesList" class="space-y-3"></div>
     </section>
 
     <!-- PESTAÑA: CALENDARIO -->
     <section id="tab-calendario" class="tab-content hidden space-y-4">
-      <div id="cardCalNav" class="flex justify-between items-center bg-slate-800 p-3 rounded-2xl border border-slate-700 transition-colors duration-300">
-        <button onclick="changeMonth(-1)" class="p-2 rounded-lg bg-slate-700 hover:bg-slate-600"><i data-feather="chevron-left"></i></button>
+      <div id="cardCalNav" class="flex justify-between items-center bg-slate-800 p-3 rounded-2xl border border-slate-700 transition-colors duration-300 shadow-sm">
+        <button onclick="changeMonth(-1)" class="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white"><i data-feather="chevron-left"></i></button>
         <span id="calendarMonthLabel" class="font-bold"></span>
-        <button onclick="changeMonth(1)" class="p-2 rounded-lg bg-slate-700 hover:bg-slate-600"><i data-feather="chevron-right"></i></button>
+        <button onclick="changeMonth(1)" class="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white"><i data-feather="chevron-right"></i></button>
       </div>
 
-      <div id="cardCalGrid" class="bg-slate-800 p-4 rounded-2xl border border-slate-700 transition-colors duration-300">
+      <div id="cardCalGrid" class="bg-slate-800 p-4 rounded-2xl border border-slate-700 transition-colors duration-300 shadow-sm">
         <div class="grid grid-cols-7 gap-1 text-center text-xs opacity-70 font-medium mb-2">
           <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
         </div>
         <div id="calendarGrid" class="grid grid-cols-7 gap-1"></div>
       </div>
 
-      <div id="cardCalDetail" class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3 transition-colors duration-300">
-        <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+      <!-- Sugerencias de Renovación Anual -->
+      <div id="renewalSuggestionsContainer" class="hidden space-y-2"></div>
+
+      <div id="cardCalDetail" class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3 transition-colors duration-300 shadow-sm">
+        <div class="flex justify-between items-center border-b border-slate-700 pb-2" id="detailBorder">
           <h3 id="selectedDateLabel" class="font-semibold">Selecciona un día</h3>
-          <button onclick="openAddModalForSelectedDate()" class="text-xs text-emerald-400 hover:underline flex items-center gap-1">
+          <button onclick="openAddModalForSelectedDate()" class="text-xs text-emerald-500 hover:underline flex items-center gap-1 font-medium">
             <i data-feather="plus-circle" class="w-3.5 h-3.5"></i> Añadir en esta fecha
           </button>
         </div>
@@ -125,8 +115,8 @@
         </div>
       </div>
 
-      <div id="cardCalChart" class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3 transition-colors duration-300">
-        <h3 class="text-sm font-semibold">Carga financiera mensual</h3>
+      <div id="cardCalChart" class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3 transition-colors duration-300 shadow-sm">
+        <h3 id="monthlyChartTitle" class="text-sm font-semibold">Carga financiera mensual</h3>
         <div id="monthlyChart" class="flex items-end justify-between h-32 gap-1 pt-4"></div>
       </div>
     </section>
@@ -135,17 +125,15 @@
     <section id="tab-configuracion" class="tab-content hidden space-y-4">
       <h2 class="text-lg font-semibold">Configuración</h2>
 
-      <!-- Selector de Modo Oscuro / Claro -->
-      <div id="cardTheme" class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3 transition-colors duration-300">
+      <div id="cardTheme" class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3 transition-colors duration-300 shadow-sm">
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-3">
-            <div id="themeIconBox" class="p-2 bg-emerald-500/20 text-emerald-400 rounded-xl"><i data-feather="moon" id="themeIcon"></i></div>
+            <div id="themeIconBox" class="p-2 bg-emerald-500/20 text-emerald-500 rounded-xl"><i data-feather="moon" id="themeIcon"></i></div>
             <div>
               <h3 class="font-medium text-sm">Apariencia</h3>
               <p id="themeStatusText" class="text-xs opacity-70">Modo Oscuro activado</p>
             </div>
           </div>
-          <!-- Toggle Switch Tema -->
           <label class="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" id="themeToggle" onchange="toggleThemeSetting()" class="sr-only peer">
             <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
@@ -153,8 +141,7 @@
         </div>
       </div>
 
-      <!-- Gestión de Categorías -->
-      <div id="cardCats" class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3 transition-colors duration-300">
+      <div id="cardCats" class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3 transition-colors duration-300 shadow-sm">
         <h3 class="font-medium text-sm">Gestionar Categorías</h3>
         <div class="flex gap-2">
           <input type="text" id="newCategoryInput" placeholder="Nueva categoría..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none">
@@ -163,29 +150,23 @@
         <div id="categoriesList" class="flex flex-wrap gap-2 pt-2"></div>
       </div>
 
-      <!-- Notificaciones -->
-      <div id="cardNotifs" class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3 transition-colors duration-300">
+      <div id="cardNotifs" class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3 transition-colors duration-300 shadow-sm">
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-3">
-            <div class="p-2 bg-emerald-500/20 text-emerald-400 rounded-xl"><i data-feather="bell"></i></div>
+            <div class="p-2 bg-emerald-500/20 text-emerald-500 rounded-xl"><i data-feather="bell"></i></div>
             <div>
               <h3 class="font-medium text-sm">Notificaciones de la App</h3>
               <p id="notificationStatusText" class="text-xs opacity-70">Alertas internas activadas</p>
             </div>
           </div>
-          <!-- Toggle Switch Notificaciones -->
           <label class="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" id="notificationToggle" onchange="toggleNotificationSetting()" class="sr-only peer">
             <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
           </label>
         </div>
-        <div id="systemNotificationInfo" class="text-[11px] opacity-70 border-t border-slate-700/50 pt-2 hidden">
-          Si bloqueaste el permiso global en iOS Safari, puedes reactivarlo en: <i>Ajustes del iPhone > Safari > Notificaciones</i>.
-        </div>
       </div>
 
-      <!-- Copias de seguridad -->
-      <div id="cardBackup" class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3 transition-colors duration-300">
+      <div id="cardBackup" class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3 transition-colors duration-300 shadow-sm">
         <div class="flex items-center space-x-3">
           <div class="p-2 bg-blue-500/20 text-blue-400 rounded-xl"><i data-feather="database"></i></div>
           <div>
@@ -194,8 +175,8 @@
           </div>
         </div>
         <div class="grid grid-cols-2 gap-2">
-          <button onclick="exportData()" class="py-2 bg-slate-700 hover:bg-slate-600 rounded-xl text-xs font-medium">Exportar JSON</button>
-          <label class="py-2 bg-slate-700 hover:bg-slate-600 rounded-xl text-xs font-medium text-center cursor-pointer">
+          <button onclick="exportData()" class="py-2 bg-slate-700 hover:bg-slate-600 rounded-xl text-xs font-medium text-white">Exportar JSON</button>
+          <label class="py-2 bg-slate-700 hover:bg-slate-600 rounded-xl text-xs font-medium text-center cursor-pointer text-white">
             Importar JSON
             <input type="file" id="importFileInput" accept=".json" onchange="importData(event)" class="hidden">
           </label>
@@ -213,7 +194,7 @@
   <!-- Navegación Inferior -->
   <nav id="appNav" class="fixed bottom-0 left-0 right-0 bg-slate-800/95 backdrop-blur border-t border-slate-700 z-30 pb-safe transition-colors duration-300">
     <div class="flex justify-around items-center h-16 max-w-lg mx-auto">
-      <button onclick="switchTab('gastos')" id="nav-gastos" class="nav-btn flex flex-col items-center justify-center w-full h-full text-emerald-400">
+      <button onclick="switchTab('gastos')" id="nav-gastos" class="nav-btn flex flex-col items-center justify-center w-full h-full text-emerald-500">
         <i data-feather="list" class="w-5 h-5"></i>
         <span class="text-[10px] mt-1 font-medium">Gastos</span>
       </button>
@@ -230,8 +211,8 @@
 
   <!-- Modal Formularios -->
   <div id="expenseModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div id="modalContentBox" class="bg-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-slate-700 p-6 space-y-4 max-h-[90vh] overflow-y-auto transition-colors duration-300">
-      <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+    <div id="modalContentBox" class="bg-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-slate-700 p-6 space-y-4 max-h-[90vh] overflow-y-auto transition-colors duration-300 shadow-xl">
+      <div class="flex justify-between items-center border-b border-slate-700 pb-3" id="modalHeaderBorder">
         <h3 id="modalTitle" class="text-lg font-bold">Nuevo Gasto</h3>
         <button onclick="closeModal()" class="opacity-70 hover:opacity-100"><i data-feather="x"></i></button>
       </div>
@@ -290,7 +271,7 @@
         </div>
 
         <div class="pt-2 flex gap-2">
-          <button type="button" onclick="closeModal()" class="w-1/2 py-2.5 bg-slate-700 hover:bg-slate-600 rounded-xl text-sm font-medium">Cancelar</button>
+          <button type="button" onclick="closeModal()" class="w-1/2 py-2.5 bg-slate-700 hover:bg-slate-600 rounded-xl text-sm font-medium text-white">Cancelar</button>
           <button type="submit" class="w-1/2 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-sm font-semibold">Guardar</button>
         </div>
       </form>
@@ -321,20 +302,20 @@
     function switchTab(tabName) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.querySelectorAll('.nav-btn').forEach(el => {
-        el.classList.remove('text-emerald-400');
+        el.classList.remove('text-emerald-500');
         el.classList.add('opacity-60');
       });
 
       document.getElementById(`tab-${tabName}`).classList.remove('hidden');
       const activeBtn = document.getElementById(`nav-${tabName}`);
-      activeBtn.classList.add('text-emerald-400');
+      activeBtn.classList.add('text-emerald-500');
       activeBtn.classList.remove('opacity-60');
 
       if (tabName === 'calendario') renderCalendar();
       if (tabName === 'configuracion') renderCategoriesConfig();
     }
 
-    // Sistema de Temas (Claro / Oscuro)
+    // Sistema de Temas (Claro / Oscuro) con total soporte visual
     function applyTheme(theme, save = true) {
       currentTheme = theme;
       if (save) localStorage.setItem('financontrol_theme', theme);
@@ -363,25 +344,29 @@
 
       if (theme === 'light') {
         body.className = 'bg-slate-100 text-slate-900 min-h-screen font-sans flex flex-col transition-colors duration-300';
-        header.className = 'bg-white/90 backdrop-blur border-b border-slate-200 sticky top-0 z-30 px-4 py-3 flex justify-between items-center transition-colors duration-300';
-        nav.className = 'fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-slate-200 z-30 pb-safe transition-colors duration-300';
-        modalBox.className = 'bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-slate-200 p-6 space-y-4 max-h-[90vh] overflow-y-auto transition-colors duration-300 text-slate-900';
+        header.className = 'bg-white/95 backdrop-blur border-b border-slate-200 sticky top-0 z-30 px-4 py-3 flex justify-between items-center transition-colors duration-300 shadow-sm';
+        nav.className = 'fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-slate-200 z-30 pb-safe transition-colors duration-300 shadow-lg';
+        modalBox.className = 'bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-slate-200 p-6 space-y-4 max-h-[90vh] overflow-y-auto transition-colors duration-300 text-slate-900 shadow-xl';
         statusText.innerText = 'Modo Claro activado';
         themeIcon.setAttribute('data-feather', 'sun');
 
         cards.forEach(c => {
-          if(c) c.className = c.className.replace(/bg-slate-800/g, 'bg-white').replace(/border-slate-700/g, 'border-slate-200');
+          if(c) {
+            c.className = c.className.replace(/bg-slate-800/g, 'bg-white').replace(/border-slate-700/g, 'border-slate-200').replace(/text-slate-100/g, 'text-slate-900');
+          }
         });
       } else {
         body.className = 'bg-slate-900 text-slate-100 min-h-screen font-sans flex flex-col transition-colors duration-300';
-        header.className = 'bg-slate-800/80 backdrop-blur border-b border-slate-700 sticky top-0 z-30 px-4 py-3 flex justify-between items-center transition-colors duration-300';
+        header.className = 'bg-slate-800/90 backdrop-blur border-b border-slate-700 sticky top-0 z-30 px-4 py-3 flex justify-between items-center transition-colors duration-300';
         nav.className = 'fixed bottom-0 left-0 right-0 bg-slate-800/95 backdrop-blur border-t border-slate-700 z-30 pb-safe transition-colors duration-300';
-        modalBox.className = 'bg-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-slate-700 p-6 space-y-4 max-h-[90vh] overflow-y-auto transition-colors duration-300 text-slate-100';
+        modalBox.className = 'bg-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-slate-700 p-6 space-y-4 max-h-[90vh] overflow-y-auto transition-colors duration-300 text-slate-100 shadow-xl';
         statusText.innerText = 'Modo Oscuro activado';
         themeIcon.setAttribute('data-feather', 'moon');
 
         cards.forEach(c => {
-          if(c) c.className = c.className.replace(/bg-white/g, 'bg-slate-800').replace(/border-slate-200/g, 'border-slate-700');
+          if(c) {
+            c.className = c.className.replace(/bg-white/g, 'bg-slate-800').replace(/border-slate-200/g, 'border-slate-700');
+          }
         });
       }
       feather.replace();
@@ -427,7 +412,7 @@
       const list = document.getElementById('categoriesList');
       list.innerHTML = '';
       categories.forEach(cat => {
-        const badgeClass = currentTheme === 'light' ? 'bg-slate-200 text-slate-800' : 'bg-slate-700 text-slate-200';
+        const badgeClass = currentTheme === 'light' ? 'bg-slate-100 text-slate-800 border border-slate-200' : 'bg-slate-700 text-slate-200';
         list.innerHTML += `
           <div class="flex items-center ${badgeClass} px-3 py-1.5 rounded-xl text-xs gap-2">
             <span>${cat}</span>
@@ -461,13 +446,23 @@
       }
     }
 
-    function openModal(editId = null) {
+    function openModal(editId = null, prefillData = null) {
       const modal = document.getElementById('expenseModal');
       const form = document.getElementById('expenseForm');
       modal.classList.remove('hidden');
       renderCategoriesSelect();
 
-      if (editId) {
+      if (prefillData) {
+        document.getElementById('modalTitle').innerText = 'Renovar Gasto (Sugerencia)';
+        document.getElementById('expenseId').value = '';
+        document.getElementById('expenseTitle').value = prefillData.title;
+        document.getElementById('expenseAmount').value = prefillData.amount;
+        document.getElementById('expenseCategory').value = prefillData.category;
+        document.getElementById('expenseFrequency').value = prefillData.frequency;
+        document.getElementById('expenseDate').value = prefillData.date;
+        document.getElementById('expensePhone').value = prefillData.phone || '';
+        document.getElementById('expenseNotice').value = prefillData.notice !== undefined ? prefillData.notice : 30;
+      } else if (editId) {
         const item = expenses.find(e => e.id === editId);
         if (item) {
           document.getElementById('modalTitle').innerText = 'Editar Gasto';
@@ -532,6 +527,7 @@
       }
     }
 
+    // Renderizado de Gastos (Calculando coste anual global)
     function renderExpenses() {
       const list = document.getElementById('expensesList');
       const countLabel = document.getElementById('expensesCount');
@@ -545,10 +541,10 @@
       let totalAnnual = 0;
       let catTotals = {};
 
-      const cardBg = currentTheme === 'light' ? 'bg-white border-slate-200' : 'bg-slate-800 border-slate-700';
+      const cardBg = currentTheme === 'light' ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-800 border-slate-700';
       const textMain = currentTheme === 'light' ? 'text-slate-900' : 'text-slate-100';
-      const badgeBg = currentTheme === 'light' ? 'bg-slate-100 text-slate-700' : 'bg-slate-700 text-slate-300';
-      const btnActionBg = currentTheme === 'light' ? 'bg-slate-100 hover:bg-slate-200 text-slate-700' : 'bg-slate-700 hover:bg-slate-600 text-slate-300';
+      const badgeBg = currentTheme === 'light' ? 'bg-slate-100 text-slate-700 border border-slate-200' : 'bg-slate-700 text-slate-300';
+      const btnActionBg = currentTheme === 'light' ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200' : 'bg-slate-700 hover:bg-slate-600 text-slate-300';
 
       expenses.forEach(item => {
         let mult = item.frequency === 'Anual' ? 1 : item.frequency === 'Semestral' ? 2 : item.frequency === 'Trimestral' ? 4 : item.frequency === 'Mensual' ? 12 : 52;
@@ -668,6 +664,7 @@
       });
     }
 
+    // Calendario y Sugerencias Anuales Inteligentes
     function renderCalendar() {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
@@ -686,8 +683,8 @@
         grid.appendChild(document.createElement('div'));
       }
 
-      const cellHover = currentTheme === 'light' ? 'hover:bg-slate-200 bg-slate-100' : 'hover:bg-slate-700 bg-slate-900/50';
-      const cellSelected = currentTheme === 'light' ? 'border-emerald-500 bg-slate-200' : 'border-emerald-400 bg-slate-700';
+      const cellHover = currentTheme === 'light' ? 'hover:bg-slate-200 bg-slate-100 text-slate-800' : 'hover:bg-slate-700 bg-slate-900/50 text-slate-200';
+      const cellSelected = currentTheme === 'light' ? 'border-emerald-500 bg-slate-200 text-slate-900 font-bold' : 'border-emerald-400 bg-slate-700 text-white font-bold';
 
       for (let day = 1; day <= totalDays; day++) {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -720,7 +717,66 @@
         grid.appendChild(dayCell);
       }
 
+      renderRenewalSuggestions(year, month + 1);
       renderMonthlyChart(year);
+    }
+
+    // Genera sugerencias si hubo gastos en este mismo mes de años anteriores
+    function renderRenewalSuggestions(year, monthNum) {
+      const container = document.getElementById('renewalSuggestionsContainer');
+      container.innerHTML = '';
+
+      // Buscar gastos que ocurrieron en este mes pero en un año anterior
+      const suggestions = expenses.filter(e => {
+        const parts = e.date.split('-');
+        if (parts.length === 3) {
+          const eYear = parseInt(parts[0]);
+          const eMonth = parseInt(parts[1]);
+          return eMonth === monthNum && eYear < year;
+        }
+        return false;
+      });
+
+      if (suggestions.length === 0) {
+        container.classList.add('hidden');
+        return;
+      }
+
+      container.classList.remove('hidden');
+      const cardBg = currentTheme === 'light' ? 'bg-emerald-50 border-emerald-200 text-slate-900' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200';
+
+      let html = `<div class="text-xs font-semibold opacity-80 px-1">💡 Sugerencias de renovación para este mes:</div>`;
+      suggestions.forEach(item => {
+        // Sugerir la misma fecha pero adaptada al año actual
+        const dayPart = item.date.split('-')[2];
+        const suggestedDate = `${year}-${String(monthNum).padStart(2, '0')}-${dayPart}`;
+
+        html += `
+          <div class="${cardBg} p-3 rounded-2xl border flex justify-between items-center text-xs">
+            <div>
+              <span class="font-bold">${item.title}</span> (${item.amount.toFixed(2)} €)
+              <div class="text-[10px] opacity-70">Venció en ${item.date} el año pasado. ¿Renovar para este año?</div>
+            </div>
+            <button onclick='acceptRenewal(${JSON.stringify(item)}, "${suggestedDate}")' class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold shadow-sm">
+              Renovar
+            </button>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function acceptRenewal(item, newDate) {
+      const duplicated = {
+        ...item,
+        id: Date.now(),
+        date: newDate
+      };
+      expenses.push(duplicated);
+      localStorage.setItem('financontrol_expenses', JSON.stringify(expenses));
+      renderExpenses();
+      renderCalendar();
+      alert(`¡Gasto "${item.title}" renovado para el ${newDate} con éxito!`);
     }
 
     function changeMonth(delta) {
@@ -752,7 +808,7 @@
       });
 
       if (dayEvents.length === 0) {
-        dayEventsList.innerHTML = `<span class="text-xs opacity-50">Sin eventos ni cobros programados para hoy.</span>`;
+        dayEventsList.innerHTML = `<span class="text-xs opacity-50">Sin eventos ni cobros programados para este día.</span>`;
       } else {
         dayEvents.forEach(ev => {
           const div = document.createElement('div');
@@ -762,7 +818,7 @@
               <div class="font-bold">${ev.type === 'charge' ? '💳 Cobro:' : '🔔 Aviso Llamada:'} ${ev.item.title}</div>
               <div class="text-[10px] opacity-80">${ev.item.amount.toFixed(2)} € - ${ev.item.category}</div>
             </div>
-            ${ev.item.phone ? `<a href="tel:${ev.item.phone}" class="px-2 py-1 bg-emerald-500 text-white rounded-lg text-[10px] font-bold">Llamar</a>` : ''}
+            ${ev.item.phone ? `<a href="tel:${ev.item.phone}" class="px-2 py-1 bg-emerald-600 text-white rounded-lg text-[10px] font-bold">Llamar</a>` : ''}
           `;
           dayEventsList.appendChild(div);
         });
@@ -775,15 +831,21 @@
       openModal();
     }
 
+    // Gráfico de carga mensual filtrando estrictamente por el año seleccionado en el calendario
     function renderMonthlyChart(year) {
+      document.getElementById('monthlyChartTitle').innerText = `Carga financiera mensual (${year})`;
       const chart = document.getElementById('monthlyChart');
       chart.innerHTML = '';
       let monthlyTotals = new Array(12).fill(0);
 
       expenses.forEach(e => {
-        let d = new Date(e.date);
-        if (d.getFullYear() === year) {
-          monthlyTotals[d.getMonth()] += e.amount;
+        const parts = e.date.split('-');
+        if (parts.length === 3) {
+          const eYear = parseInt(parts[0]);
+          const eMonth = parseInt(parts[1]) - 1;
+          if (eYear === year) {
+            monthlyTotals[eMonth] += e.amount;
+          }
         }
       });
 
@@ -794,7 +856,7 @@
         let heightPct = (val / max) * 100;
         chart.innerHTML += `
           <div class="flex-1 flex flex-col items-center h-full justify-end">
-            <div class="w-full bg-emerald-500/30 rounded-t-sm hover:bg-emerald-500 transition" style="height: ${heightPct}%"></div>
+            <div class="w-full bg-emerald-500/40 rounded-t-sm hover:bg-emerald-500 transition" style="height: ${heightPct}%" title="${monthlyTotals[idx]} €"></div>
             <span class="text-[9px] opacity-70 mt-1">${monthsShort[idx]}</span>
           </div>
         `;
@@ -804,36 +866,16 @@
     function initNotificationUI() {
       const toggle = document.getElementById('notificationToggle');
       const text = document.getElementById('notificationStatusText');
-      const info = document.getElementById('systemNotificationInfo');
-
       toggle.checked = notificationsEnabled;
       text.innerText = notificationsEnabled ? 'Alertas internas activadas' : 'Alertas silenciadas en la app';
-
-      if ('Notification' in window && Notification.permission === 'denied') {
-        info.classList.remove('hidden');
-      }
     }
 
     function toggleNotificationSetting() {
       const toggle = document.getElementById('notificationToggle');
       notificationsEnabled = toggle.checked;
       localStorage.setItem('financontrol_notifications', JSON.stringify(notificationsEnabled));
-
       const text = document.getElementById('notificationStatusText');
       text.innerText = notificationsEnabled ? 'Alertas internas activadas' : 'Alertas silenciadas en la app';
-
-      if (notificationsEnabled && 'Notification' in window) {
-        if (Notification.permission !== 'granted') {
-          Notification.requestPermission().then(perm => {
-            if (perm === 'granted') {
-              new Notification("FinanControl", {
-                body: "¡Notificaciones activadas correctamente!",
-                icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='120' fill='%2310b981'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='320' fill='white'>€</text></svg>"
-              });
-            }
-          });
-        }
-      }
     }
 
     function exportData() {
