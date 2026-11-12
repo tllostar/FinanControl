@@ -93,44 +93,58 @@
       <!-- SEPARADOR VISUAL -->
       <div class="border-t border-slate-700 my-6"></div>
 
-      <!-- PANEL DE FILTRADO COMPLETO DE GASTOS -->
-      <div class="space-y-3 bg-slate-800/60 p-4 rounded-2xl border border-slate-700 transition-colors duration-300">
-        <div class="flex justify-between items-center">
-          <h2 class="text-sm font-semibold">Filtrar Lista de Gastos</h2>
-          <button onclick="resetFilters()" class="text-xs text-emerald-400 hover:underline">Limpiar filtros</button>
+      <!-- CABECERA COLAPSIBLE DE GASTOS -->
+      <div class="flex justify-between items-center cursor-pointer bg-slate-800/80 p-3 rounded-2xl border border-slate-700 transition-colors duration-300" onclick="toggleExpensesCollapse()">
+        <div class="flex items-center space-x-2">
+          <h2 class="text-sm font-semibold">Lista de Gastos</h2>
+          <span id="collapsedCountBadge" class="text-[10px] bg-slate-700 px-2 py-0.5 rounded-full opacity-80">0</span>
         </div>
-
-        <div class="grid grid-cols-2 gap-2">
-          <!-- Filtro por Año -->
-          <select id="filterListYear" onchange="renderExpenses()" class="text-xs bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500">
-            <option value="all">Año: Todos</option>
-          </select>
-
-          <!-- Filtro por Categoría -->
-          <select id="filterListCategory" onchange="renderExpenses()" class="text-xs bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500">
-            <option value="all">Categoría: Todas</option>
-          </select>
-        </div>
-
-        <div class="grid grid-cols-3 gap-2">
-          <!-- Filtro por Mes -->
-          <select id="filterListMonth" onchange="renderExpenses()" class="text-xs bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500">
-            <option value="all">Mes: Todos</option>
-            <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4">Abril</option>
-            <option value="5">Mayo</option><option value="6">Junio</option><option value="7">Julio</option><option value="8">Agosto</option>
-            <option value="9">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
-          </select>
-
-          <!-- Importe Mínimo -->
-          <input type="number" id="filterMinAmount" oninput="renderExpenses()" placeholder="Mín €" class="text-xs bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500">
-
-          <!-- Importe Máximo -->
-          <input type="number" id="filterMaxAmount" oninput="renderExpenses()" placeholder="Máx €" class="text-xs bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500">
+        <div class="flex items-center space-x-2 text-xs text-emerald-400 font-medium">
+          <span id="collapseToggleLabel">Ocultar</span>
+          <i data-feather="chevron-down" id="collapseIcon" class="w-4 h-4 transition-transform duration-300 transform rotate-180"></i>
         </div>
       </div>
 
-      <!-- Lista de Gastos -->
-      <div id="expensesList" class="space-y-3"></div>
+      <!-- PANEL CONTENEDOR DE FILTROS Y LISTA (COLAPSIBLE) -->
+      <div id="collapsibleExpensesSection" class="space-y-3 transition-all duration-300">
+        <div class="space-y-3 bg-slate-800/60 p-4 rounded-2xl border border-slate-700 transition-colors duration-300">
+          <div class="flex justify-between items-center">
+            <h3 class="text-xs font-semibold opacity-80">Filtrar Lista</h3>
+            <button onclick="resetFilters()" class="text-xs text-emerald-400 hover:underline">Limpiar filtros</button>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <!-- Filtro por Año -->
+            <select id="filterListYear" onchange="renderExpenses()" class="text-xs bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500">
+              <option value="all">Año: Todos</option>
+            </select>
+
+            <!-- Filtro por Categoría -->
+            <select id="filterListCategory" onchange="renderExpenses()" class="text-xs bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500">
+              <option value="all">Categoría: Todas</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2">
+            <!-- Filtro por Mes -->
+            <select id="filterListMonth" onchange="renderExpenses()" class="text-xs bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500">
+              <option value="all">Mes: Todos</option>
+              <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4">Abril</option>
+              <option value="5">Mayo</option><option value="6">Junio</option><option value="7">Julio</option><option value="8">Agosto</option>
+              <option value="9">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+            </select>
+
+            <!-- Importe Mínimo -->
+            <input type="number" id="filterMinAmount" oninput="renderExpenses()" placeholder="Mín €" class="text-xs bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500">
+
+            <!-- Importe Máximo -->
+            <input type="number" id="filterMaxAmount" oninput="renderExpenses()" placeholder="Máx €" class="text-xs bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500">
+          </div>
+        </div>
+
+        <!-- Lista de Gastos -->
+        <div id="expensesList" class="space-y-3"></div>
+      </div>
     </section>
 
     <!-- PESTAÑA: CALENDARIO -->
@@ -158,7 +172,7 @@
           </button>
         </div>
         <div id="dayEventsList" class="space-y-2 text-sm opacity-80">
-          Toca cualquier día del calendario para consultar cobros o avisos.
+          Toca cualquier día del calendario para consultar cobros programados.
         </div>
       </div>
 
@@ -233,8 +247,8 @@
 
   </main>
 
-  <!-- Botón Flotante "+" -->
-  <button onclick="openModal()" class="fixed right-5 bottom-24 w-14 h-14 bg-emerald-500 hover:bg-emerald-400 text-white rounded-full shadow-2xl flex items-center justify-center z-40 active:scale-95 transition">
+  <!-- Botón Flotante "+" (Ajustado z-index y posición para no estorbar) -->
+  <button onclick="openModal()" class="fixed right-5 bottom-20 w-14 h-14 bg-emerald-500 hover:bg-emerald-400 text-white rounded-full shadow-2xl flex items-center justify-center z-20 active:scale-95 transition">
     <i data-feather="plus" class="w-7 h-7"></i>
   </button>
 
@@ -295,26 +309,14 @@
             </select>
           </div>
           <div>
-            <label class="block text-xs opacity-70 mb-1">Próximo Cobro</label>
+            <label class="block text-xs opacity-70 mb-1">Fecha de Cobro</label>
             <input type="date" id="expenseDate" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none">
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs opacity-70 mb-1">Teléfono Empresa</label>
-            <input type="tel" id="expensePhone" placeholder="ej. 900123456" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none">
-          </div>
-          <div>
-            <label class="block text-xs opacity-70 mb-1">Avisar</label>
-            <select id="expenseNotice" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none">
-              <option value="0">No avisar</option>
-              <option value="7">7 días antes</option>
-              <option value="15">15 días antes</option>
-              <option value="30" selected>30 días antes</option>
-              <option value="60">60 días antes</option>
-            </select>
-          </div>
+        <div>
+          <label class="block text-xs opacity-70 mb-1">Teléfono Empresa (Opcional)</label>
+          <input type="tel" id="expensePhone" placeholder="ej. 900123456" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none">
         </div>
 
         <div class="pt-2 flex gap-2">
@@ -334,6 +336,7 @@
     let activeYearFilter = 'all';
     let currentDate = new Date();
     let selectedDayDate = null;
+    let isExpensesCollapsed = false;
 
     const categoryColorsHex = ['#10B981', '#3B82F6', '#F59E0B', '#A855F7', '#EC4899', '#14B8A6', '#6366F1'];
 
@@ -362,6 +365,23 @@
 
       if (tabName === 'calendario') renderCalendar();
       if (tabName === 'configuracion') renderCategoriesConfig();
+    }
+
+    function toggleExpensesCollapse() {
+      isExpensesCollapsed = !isExpensesCollapsed;
+      const section = document.getElementById('collapsibleExpensesSection');
+      const toggleLabel = document.getElementById('collapseToggleLabel');
+      const icon = document.getElementById('collapseIcon');
+
+      if (isExpensesCollapsed) {
+        section.classList.add('hidden');
+        toggleLabel.innerText = 'Mostrar';
+        icon.classList.remove('rotate-180');
+      } else {
+        section.classList.remove('hidden');
+        toggleLabel.innerText = 'Ocultar';
+        icon.classList.add('rotate-180');
+      }
     }
 
     function applyTheme(theme, save = true) {
@@ -522,7 +542,6 @@
         document.getElementById('expenseFrequency').value = prefillData.frequency;
         document.getElementById('expenseDate').value = prefillData.date;
         document.getElementById('expensePhone').value = prefillData.phone || '';
-        document.getElementById('expenseNotice').value = prefillData.notice !== undefined ? prefillData.notice : 30;
       } else if (editId) {
         const item = expenses.find(e => e.id === editId);
         if (item) {
@@ -534,13 +553,11 @@
           document.getElementById('expenseFrequency').value = item.frequency;
           document.getElementById('expenseDate').value = item.date;
           document.getElementById('expensePhone').value = item.phone || '';
-          document.getElementById('expenseNotice').value = item.notice !== undefined ? item.notice : 30;
         }
       } else {
         document.getElementById('modalTitle').innerText = 'Nuevo Gasto';
         form.reset();
         document.getElementById('expenseId').value = '';
-        document.getElementById('expenseNotice').value = "30";
         if (selectedDayDate) {
           document.getElementById('expenseDate').value = selectedDayDate;
         } else {
@@ -563,8 +580,7 @@
         category: document.getElementById('expenseCategory').value,
         frequency: document.getElementById('expenseFrequency').value,
         date: document.getElementById('expenseDate').value,
-        phone: document.getElementById('expensePhone').value,
-        notice: parseInt(document.getElementById('expenseNotice').value)
+        phone: document.getElementById('expensePhone').value
       };
 
       if (id) {
@@ -653,6 +669,7 @@
     function renderExpenses() {
       const list = document.getElementById('expensesList');
       const countLabel = document.getElementById('expensesCount');
+      const collapsedCountBadge = document.getElementById('collapsedCountBadge');
       const annualTotalHeader = document.getElementById('annualTotalHeader');
       const catSummary = document.getElementById('categorySummary');
       const catProgressBar = document.getElementById('categoryProgressBar');
@@ -667,6 +684,7 @@
       if (!list) return;
       list.innerHTML = '';
       countLabel.innerText = `${expenses.length} registrados`;
+      if (collapsedCountBadge) collapsedCountBadge.innerText = expenses.length;
 
       if (chartTitle) {
         chartTitle.innerText = activeYearFilter === 'all' ? 'Análisis por Categoría (Todos los años)' : `Análisis por Categoría (${activeYearFilter})`;
@@ -864,23 +882,14 @@
         dayCell.innerHTML = `<span>${day}</span>`;
 
         let hasCharge = false;
-        let hasNotice = false;
-
         expenses.forEach(e => {
           if (e.date === dateStr) hasCharge = true;
-          const noticeDays = e.notice !== undefined ? e.notice : 30;
-          if (noticeDays > 0) {
-            let chargeDate = new Date(e.date);
-            chargeDate.setDate(chargeDate.getDate() - noticeDays);
-            if (chargeDate.toISOString().split('T')[0] === dateStr) hasNotice = true;
-          }
         });
 
-        if (hasCharge || hasNotice) {
+        if (hasCharge) {
           const dots = document.createElement('div');
           dots.className = 'flex gap-0.5 mt-0.5';
-          if (hasCharge) dots.innerHTML += `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>`;
-          if (hasNotice) dots.innerHTML += `<span class="w-1.5 h-1.5 bg-amber-400 rounded-full"></span>`;
+          dots.innerHTML += `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>`;
           dayCell.appendChild(dots);
         }
 
@@ -969,25 +978,17 @@
         if (e.date === dateStr) {
           dayEvents.push({ type: 'charge', item: e });
         }
-        const noticeDays = e.notice !== undefined ? e.notice : 30;
-        if (noticeDays > 0) {
-          let chargeDate = new Date(e.date);
-          chargeDate.setDate(chargeDate.getDate() - noticeDays);
-          if (chargeDate.toISOString().split('T')[0] === dateStr) {
-            dayEvents.push({ type: 'notice', item: e });
-          }
-        }
       });
 
       if (dayEvents.length === 0) {
-        dayEventsList.innerHTML = `<span class="text-xs opacity-50">Sin eventos ni cobros programados para este día.</span>`;
+        dayEventsList.innerHTML = `<span class="text-xs opacity-50">Sin cobros programados para este día.</span>`;
       } else {
         dayEvents.forEach(ev => {
           const div = document.createElement('div');
-          div.className = `p-2.5 rounded-xl border text-xs flex justify-between items-center ${ev.type === 'charge' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-amber-500/10 border-amber-500/30 text-amber-500'}`;
+          div.className = `p-2.5 rounded-xl border text-xs flex justify-between items-center bg-emerald-500/10 border-emerald-500/30 text-emerald-500`;
           div.innerHTML = `
             <div>
-              <div class="font-bold">${ev.type === 'charge' ? '💳 Cobro:' : '🔔 Aviso Llamada:'} ${ev.item.title}</div>
+              <div class="font-bold">💳 Cobro: ${ev.item.title}</div>
               <div class="text-[10px] opacity-80">${ev.item.amount.toFixed(2)} € - ${ev.item.category}</div>
             </div>
             ${ev.item.phone ? `<a href="tel:${ev.item.phone}" class="px-2 py-1 bg-emerald-600 text-white rounded-lg text-[10px] font-bold">Llamar</a>` : ''}
